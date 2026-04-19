@@ -74,15 +74,12 @@ const installBunSchema = z.object({
 
 const bootstrapHostSchema = z
   .object({
-    SUDO_USER: z.string().trim().optional(),
-    USER: z.string().trim().optional(),
+    SUDO_USER: nonEmptyString.refine((value) => value !== "root", {
+      message: "must be the non-root sudo invoker",
+    }),
   })
   .transform((value) => {
-    const invokingUser = value.SUDO_USER || value.USER;
-    if (!invokingUser) {
-      throw new Error("SUDO_USER or USER must be set");
-    }
-    return { invokingUser };
+    return { invokingUser: value.SUDO_USER };
   });
 
 export type OpsPathsEnv = z.infer<typeof opsPathsSchema>;
