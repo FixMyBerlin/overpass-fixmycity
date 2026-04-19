@@ -111,6 +111,8 @@ bun --env-file=infra/docker/.env scripts/ops/stop_stack.ts
   docker compose --env-file infra/docker/.env -f infra/docker/docker-compose.yml down
   docker compose --env-file infra/docker/.env -f infra/docker/docker-compose.yml up -d
   ```
+  Healthcheck policy:
+  - Runtime/default (strict startup window): `infra/docker/docker-compose.yml` only (`start_period: 15m`).
 
 - **Re-download required (intentional full rebuild only)**  
   Delete volumes/data and re-run bootstrap:
@@ -119,6 +121,13 @@ bun --env-file=infra/docker/.env scripts/ops/stop_stack.ts
   bun --env-file=infra/docker/.env scripts/ops/start_stack.ts
   ```
   Use this when you intentionally want a clean DB bootstrap (for example after changing baseline source URL or when DB state is irrecoverable).
+  For direct compose startup during bootstrap-heavy imports, include the bootstrap override with long grace:
+  ```bash
+  docker compose --env-file infra/docker/.env \
+    -f infra/docker/docker-compose.yml \
+    -f infra/docker/docker-compose.bootstrap.yml up -d
+  ```
+  If imports on this host regularly exceed 8h before API availability, increase only the bootstrap override `start_period` to `12h`.
 
 ## Traefik Troubleshooting
 
