@@ -15,9 +15,9 @@ This repository contains a Docker-first, reproducible setup for running an Overp
 
 ## Workflow Summary
 
-1. Prepare host and create local cache directories.
-2. Download baseline Germany extract once (cache-first workflow).
-3. Start the Docker stack and import baseline data.
+1. Prepare host and persistent data directories.
+2. Configure container auth for protected Geofabrik source downloads.
+3. Start the Docker stack and import baseline data in-container.
 4. Run smoke tests for query functionality and replication progress.
 5. Apply hardening and access controls before production exposure.
 
@@ -35,7 +35,7 @@ Monitoring setup and alert policy are documented in `docs/ops/oneuptime-monitori
 
 ```bash
 cp infra/docker/.env.example infra/docker/.env
-bun --env-file=infra/docker/.env scripts/ops/download_extract.ts
+# edit infra/docker/.env and set OVERPASS_OAUTH_PASSWORD
 bun --env-file=infra/docker/.env scripts/ops/start_stack.ts
 bun --env-file=infra/docker/.env tests/smoke/run_smoke.ts
 ```

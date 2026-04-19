@@ -19,7 +19,7 @@ External references:
 - The service is not planned as a broadly promoted public API.
 - In practice, usage can still come from a mixed user set (internal apps and ad-hoc users).
 - Initial rollout prioritizes low friction, so access should stay simple and easy to use.
-- The primary dataset is Germany only (`OVERPASS_EXTRACT_URL`), which lowers but does not remove misuse risk.
+- The primary dataset is Germany only (configured through `OVERPASS_PLANET_URL`), which lowers but does not remove misuse risk.
 - Existing controls are ingress-first (Traefik routing, allowlist options, and proxy timeouts).
 
 ## Challenge To The Scenario

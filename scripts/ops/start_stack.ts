@@ -1,21 +1,50 @@
 #!/usr/bin/env bun
 
 import { $ } from "bun";
-import { chmodSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { getOpsPathsEnv, getOverpassPlanetEnv } from "../config/env";
+import { getOauthClientEnv, getOpsPathsEnv, getOverpassPlanetEnv } from "../config/env";
 import { ENV_FILE, ROOT_DIR, log, requireCommand } from "./lib";
 
 $.throws(true);
 
 requireCommand("docker");
-const { OVERPASS_DATA_ROOT, OVERPASS_CACHE_ROOT, TRAEFIK_ACME_ROOT } = getOpsPathsEnv();
+const { OVERPASS_DATA_ROOT, TRAEFIK_ACME_ROOT } = getOpsPathsEnv();
 getOverpassPlanetEnv();
+const oauthClientEnv = getOauthClientEnv();
+
+function syncOauthSettingsFile(): void {
+  const secretsDir = path.join(OVERPASS_DATA_ROOT, "secrets");
+  const settingsPath = path.join(secretsDir, "oauth-settings.json");
+  mkdirSync(secretsDir, { recursive: true });
+
+  if (oauthClientEnv.USE_OAUTH_COOKIE_CLIENT !== "yes") {
+    if (existsSync(settingsPath)) {
+      rmSync(settingsPath);
+    }
+    return;
+  }
+
+  writeFileSync(
+    settingsPath,
+    `${JSON.stringify(
+      {
+        user: oauthClientEnv.OVERPASS_OAUTH_USER,
+        password: oauthClientEnv.OVERPASS_OAUTH_PASSWORD,
+        osm_host: oauthClientEnv.OVERPASS_OAUTH_OSM_HOST,
+        consumer_url: oauthClientEnv.OVERPASS_OAUTH_CONSUMER_URL,
+      },
+      null,
+      2,
+    )}\n`,
+    "utf8",
+  );
+  chmodSync(settingsPath, 0o600);
+}
+
+syncOauthSettingsFile();
 
 mkdirSync(path.join(OVERPASS_DATA_ROOT, "db"), {
-  recursive: true,
-});
-mkdirSync(path.join(OVERPASS_CACHE_ROOT, "extracts"), {
   recursive: true,
 });
 mkdirSync(TRAEFIK_ACME_ROOT, { recursive: true });

@@ -47,7 +47,6 @@ function parseEnv<T extends z.ZodTypeAny>(schema: T, scope: string): z.infer<T> 
 
 const opsPathsSchema = z.object({
   OVERPASS_DATA_ROOT: rootRelativePath,
-  OVERPASS_CACHE_ROOT: rootRelativePath,
   TRAEFIK_ACME_ROOT: rootRelativePath,
 });
 
@@ -59,9 +58,38 @@ const overpassPlanetSchema = z.object({
   OVERPASS_PLANET_URL: httpOrFileUrl,
 });
 
-const extractSourceSchema = z.object({
-  OVERPASS_EXTRACT_URL: httpUrl,
-});
+const oauthClientSchema = z
+  .object({
+    USE_OAUTH_COOKIE_CLIENT: z.enum(["yes", "no"]).default("no"),
+    OVERPASS_OAUTH_USER: z.string().trim().optional(),
+    OVERPASS_OAUTH_PASSWORD: z.string().trim().optional(),
+    OVERPASS_OAUTH_OSM_HOST: httpUrl.default("https://www.openstreetmap.org"),
+    OVERPASS_OAUTH_CONSUMER_URL: httpUrl.default(
+      "https://osm-internal.download.geofabrik.de/get_cookie",
+    ),
+  })
+  .superRefine((value, ctx) => {
+    if (value.USE_OAUTH_COOKIE_CLIENT !== "yes") {
+      return;
+    }
+
+    if (!value.OVERPASS_OAUTH_USER) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["OVERPASS_OAUTH_USER"],
+        message: "is required when USE_OAUTH_COOKIE_CLIENT=yes",
+      });
+    }
+
+    if (!value.OVERPASS_OAUTH_PASSWORD) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["OVERPASS_OAUTH_PASSWORD"],
+        message: "is required when USE_OAUTH_COOKIE_CLIENT=yes",
+      });
+      return;
+    }
+  });
 
 const runtimeTestSchema = z.object({
   OVERPASS_CONTAINER_NAME: nonEmptyString,
@@ -85,7 +113,7 @@ const bootstrapHostSchema = z
 export type OpsPathsEnv = z.infer<typeof opsPathsSchema>;
 export type OverpassBaseUrlEnv = z.infer<typeof overpassBaseUrlSchema>;
 export type OverpassPlanetEnv = z.infer<typeof overpassPlanetSchema>;
-export type ExtractSourceEnv = z.infer<typeof extractSourceSchema>;
+export type OauthClientEnv = z.infer<typeof oauthClientSchema>;
 export type RuntimeTestEnv = z.infer<typeof runtimeTestSchema>;
 export type InstallBunEnv = z.infer<typeof installBunSchema>;
 export type BootstrapHostEnv = z.infer<typeof bootstrapHostSchema>;
@@ -102,8 +130,8 @@ export function getOverpassPlanetEnv(): OverpassPlanetEnv {
   return parseEnv(overpassPlanetSchema, "overpass planet URL");
 }
 
-export function getExtractSourceEnv(): ExtractSourceEnv {
-  return parseEnv(extractSourceSchema, "extract source");
+export function getOauthClientEnv(): OauthClientEnv {
+  return parseEnv(oauthClientSchema, "oauth client");
 }
 
 export function getRuntimeTestEnv(): RuntimeTestEnv {

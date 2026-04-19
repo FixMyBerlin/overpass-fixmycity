@@ -19,8 +19,8 @@
 
 ## Implications For This Repository
 
-- Start with no attic/history and no meta data for baseline reliability.
+- Run without attic/history and keep metadata enabled to preserve user and changeset fields.
 - Keep minute replication visibility as a first-class validation target.
 - Design scripts to be idempotent and resilient to interruptions.
-- Prefer cache-first ingestion to avoid repeated load on Geofabrik and other upstream services.
+- Use container-native authenticated downloads from Geofabrik and reuse persistent `/db` across local iterations.
 - Separate internal Overpass container from internet exposure via proxy and strict access policies.

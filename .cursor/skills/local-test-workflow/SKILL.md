@@ -55,11 +55,38 @@ Use this before handoff when multiple test areas may be affected.
 
 ```bash
 cp infra/docker/.env.example infra/docker/.env
-bun --env-file=infra/docker/.env scripts/ops/download_extract.ts
+# edit infra/docker/.env and set OVERPASS_OAUTH_PASSWORD
 bun --env-file=infra/docker/.env scripts/ops/start_stack.ts
 ```
 
 Then run the chosen test command.
+
+## Germany data re-download decision matrix
+
+- **Goal: run tests repeatedly, no dataset reset needed**  
+  Keep `/db` persistent and restart normally:
+  ```bash
+  bun --env-file=infra/docker/.env scripts/ops/stop_stack.ts
+  bun --env-file=infra/docker/.env scripts/ops/start_stack.ts
+  ```
+
+- **Goal: apply code/config changes only (same dataset)**  
+  Recreate containers without deleting volumes:
+  ```bash
+  docker compose --env-file infra/docker/.env -f infra/docker/docker-compose.yml down
+  docker compose --env-file infra/docker/.env -f infra/docker/docker-compose.yml up -d
+  ```
+
+- **Goal: intentionally re-bootstrap from Geofabrik (heavy; avoid in routine local tests)**  
+  Delete Overpass DB volume/bind data, then start again:
+  ```bash
+  docker compose --env-file infra/docker/.env -f infra/docker/docker-compose.yml down -v
+  bun --env-file=infra/docker/.env scripts/ops/start_stack.ts
+  ```
+  Use this only when you intentionally need a full rebuild (e.g. switching baseline source or corrupted DB).
+
+- **Rule of thumb**  
+  `down -v` means "download/import again". If that is not your intent, do not use it.
 
 For explicit Traefik URL testing:
 
