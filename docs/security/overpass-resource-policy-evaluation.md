@@ -43,10 +43,11 @@ The assumptions are reasonable, but they can fail in specific ways:
 ### `OVERPASS_RATE_LIMIT`
 
 - What it does: dispatcher-level per-client fairness control.
-- Use now: yes, as an optional minimal safeguard if access is intentionally broad.
+- Deployment policy: enabled as the minimal internal safeguard for mixed easy-access usage.
 - Why yes: this is the lowest-overhead abuse/fairness control inside Overpass and does not require building custom auth.
 - Why no (alternative): if access is still effectively constrained to trusted internal clients, leave unset to avoid 429s and client retry behavior.
-- Practical recommendation: if service is open beyond a small trusted group, set a conservative value and monitor 429 rates.
+- Practical recommendation: keep a conservative value (`OVERPASS_RATE_LIMIT=2`) and monitor 429 rates before tuning upward.
+- Why `2`: it allows limited parallel usage for normal app traffic while reducing the chance that one client monopolizes the service.
 
 ### `OVERPASS_TIME`
 
@@ -76,9 +77,9 @@ The assumptions are reasonable, but they can fail in specific ways:
   - `OVERPASS_TIME`
   - `OVERPASS_SPACE`
   - `OVERPASS_MAX_TIMEOUT`
-- Decide `OVERPASS_RATE_LIMIT` based on actual exposure:
-  - If traffic is effectively trusted/internal: keep unset.
-  - If service is easy-access for mixed users: enable as the first and only Overpass-internal safeguard.
+- Enable `OVERPASS_RATE_LIMIT` by default as the first and only Overpass-internal safeguard:
+  - Deployment baseline: `OVERPASS_RATE_LIMIT=2`
+  - Revisit if observed traffic is strictly trusted/internal and 429 behavior is undesirable.
 
 ## Decision Rules (Simple)
 
@@ -86,7 +87,7 @@ The assumptions are reasonable, but they can fail in specific ways:
 - Add only one internal knob at a time when a concrete symptom appears.
 - Prefer this order of intervention:
   1. Confirm ingress posture and timeout behavior.
-  2. Add `OVERPASS_RATE_LIMIT` for fairness if user mix broadens.
+  2. Keep `OVERPASS_RATE_LIMIT` enabled and tune only when evidence requires it.
   3. Tune `OVERPASS_TIME` and `OVERPASS_SPACE` only after collecting evidence of contention or memory pressure.
 
 ## What This Means For "Do As Little As Possible"
@@ -94,6 +95,6 @@ The assumptions are reasonable, but they can fail in specific ways:
 Doing as little as possible is still compatible with one meaningful safeguard:
 
 - Minimalist option A (strictly minimal): leave all Overpass internal knobs unset and rely on ingress controls.
-- Minimalist option B (recommended for easy-access mixed users): set only `OVERPASS_RATE_LIMIT`; keep all other knobs unset.
+- Minimalist option B (deployment baseline): set only `OVERPASS_RATE_LIMIT`; keep all other knobs unset.
 
 Option B provides materially better fairness/risk reduction with low operational burden and no custom service logic.

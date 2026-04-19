@@ -29,3 +29,4 @@ mTLS at ingress if VPN rollout is not feasible for all consumers.
 ## Related Guidance
 
 - For an ingress-first versus Overpass-internal knob decision framework, see `docs/security/overpass-resource-policy-evaluation.md`.
+- This deployment enables `OVERPASS_RATE_LIMIT` as a lightweight internal fairness guard while keeping other internal knobs unset.
