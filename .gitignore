@@ -1,3 +1,4 @@
 .local/
 infra/docker/.env
 *.log
+node_modules/
