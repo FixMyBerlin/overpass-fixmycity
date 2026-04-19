@@ -30,7 +30,8 @@ services:
       - overpass_net
 
   overpass:
-    image: openzonedev/overpass-api:0.7.57.2
+    image: wiktorn/overpass-api:0.7.62
+    platform: linux/amd64
     container_name: overpass_de
     restart: unless-stopped
     environment:

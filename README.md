@@ -21,6 +21,16 @@ This repository contains a Docker-first, reproducible setup for running an Overp
 4. Run smoke tests for query functionality and replication progress.
 5. Apply hardening and access controls before production exposure.
 
+## Image And Runtime Strategy
+
+- Overpass runs on `wiktorn/overpass-api:0.7.62`, pinned for repeatable production deployments while staying on a currently maintained upstream image.
+- Compose sets `platform: linux/amd64` for the Overpass service so Apple Silicon Macs can run the image through Docker emulation when needed.
+- On ARM Macs, emulation is expected to be slower (especially during import and heavy queries) than native ARM images, but behavior is consistent with x86_64 environments.
+
+## Monitoring
+
+Monitoring setup and alert policy are documented in `docs/ops/oneuptime-monitoring.md`.
+
 ## Quick Start
 
 ```bash

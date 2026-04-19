@@ -1,5 +1,7 @@
 # Operations Runbook
 
+Monitoring configuration and incident policy are maintained in `docs/ops/oneuptime-monitoring.md`.
+
 ## 1) Initialize Environment
 
 ```bash
@@ -43,6 +45,11 @@ bun --env-file=infra/docker/.env scripts/ops/start_stack.ts
 ```
 
 This script creates `${TRAEFIK_ACME_ROOT}/acme.json` with restrictive permissions if missing.
+
+Image/runtime note:
+
+- Overpass is pinned to `wiktorn/overpass-api:0.7.62` in Compose for stable, repeatable production behavior on a maintained image line.
+- Compose enforces `platform: linux/amd64` for Overpass to keep Mac ARM hosts compatible via Docker emulation; expect lower performance versus native ARM execution.
 
 ## 4) Verify Query And Update Signals
 
