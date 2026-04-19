@@ -53,8 +53,8 @@ bun scripts/ops/check_update_lag.ts
 For Traefik-only deployments, set an explicit base URL:
 
 ```bash
-OVERPASS_BASE_URL="https://your-overpass-domain" bun tests/smoke/run_smoke.ts
-OVERPASS_BASE_URL="https://your-overpass-domain" bun scripts/ops/check_update_lag.ts
+OVERPASS_BASE_URL="https://overpass.fixmycity.de" bun tests/smoke/run_smoke.ts
+OVERPASS_BASE_URL="https://overpass.fixmycity.de" bun scripts/ops/check_update_lag.ts
 ```
 
 ## 5) Stop Stack
