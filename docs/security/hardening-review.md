@@ -17,7 +17,7 @@
 
 ## Code Hygiene Checklist
 
-- Scripts are modularized with shared helpers in `scripts/ops/lib.sh`.
-- Entry scripts use strict shell options (`set -euo pipefail`).
+- Scripts are modularized with shared helpers in `scripts/ops/lib.ts`.
+- Entry scripts run under Bun with strict TypeScript checks.
 - Cache and refresh behavior is explicit rather than implicit.
 - Keep one script per responsibility (download/start/stop/query/update checks).

@@ -1,0 +1,17 @@
+{
+  "name": "overpass-docker-workspace",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "ops:download-extract": "bun scripts/ops/download_extract.ts",
+    "ops:start-stack": "bun scripts/ops/start_stack.ts",
+    "ops:stop-stack": "bun scripts/ops/stop_stack.ts",
+    "ops:verify-query": "bun scripts/ops/verify_query.ts",
+    "ops:check-replication": "bun scripts/ops/check_replication.ts",
+    "ops:check-update-lag": "bun scripts/ops/check_update_lag.ts",
+    "smoke:offline": "bun tests/smoke/offline_validation.ts",
+    "smoke:run": "bun tests/smoke/run_smoke.ts",
+    "bootstrap:host": "bun scripts/bootstrap/bootstrap_host.ts",
+    "bootstrap:install-bun": "bun scripts/bootstrap/install_bun.ts"
+  }
+}

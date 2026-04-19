@@ -11,38 +11,38 @@ Edit `infra/docker/.env` for host-specific paths and ports.
 ## 2) One-Time Germany Extract Cache
 
 ```bash
-bash scripts/ops/download_extract.sh
+bun scripts/ops/download_extract.ts
 ```
 
 Optional explicit refresh:
 
 ```bash
-bash scripts/ops/download_extract.sh --force-refresh
+bun scripts/ops/download_extract.ts --force-refresh
 ```
 
 Optional metadata refresh only (no full file download):
 
 ```bash
-bash scripts/ops/download_extract.sh --refresh-metadata
+bun scripts/ops/download_extract.ts --refresh-metadata
 ```
 
 ## 3) Start Stack
 
 ```bash
-bash scripts/ops/start_stack.sh
+bun scripts/ops/start_stack.ts
 ```
 
 ## 4) Verify Query And Update Signals
 
 ```bash
-bash tests/smoke/run_smoke.sh
-bash scripts/ops/check_update_lag.sh
+bun tests/smoke/run_smoke.ts
+bun scripts/ops/check_update_lag.ts
 ```
 
 ## 5) Stop Stack
 
 ```bash
-bash scripts/ops/stop_stack.sh
+bun scripts/ops/stop_stack.ts
 ```
 
 ## Recovery Notes

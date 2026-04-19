@@ -1,0 +1,3 @@
+[run]
+# Keep runtime startup simple and predictable.
+shell = "bun"
