@@ -14,7 +14,7 @@ type CliOptions = {
 };
 
 const DEFAULT_STATUS_URL = "http://127.0.0.1:8080/api/status";
-const DEFAULT_MAX_LAG_SECONDS = 1800;
+const DEFAULT_MAX_LAG_SECONDS = 300;
 const DEFAULT_TIMEOUT_SECONDS = 10;
 
 requireCommand("curl");

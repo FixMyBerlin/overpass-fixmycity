@@ -10,6 +10,20 @@ Monitoring is designed to answer:
 - Is TLS still valid?
 - Is replication still advancing within our SLO?
 
+## Configuration Source Of Truth
+
+Use `infra/ansible/group_vars/all.yml` as the authoritative source for deployment values:
+
+- `monitoring_status_url`
+- `monitoring_max_lag_seconds`
+- `monitoring_timer_cadence`
+- `monitoring_on_boot_delay`
+- `monitoring_accuracy`
+- `overpass_repo_root`
+- `monitoring_script_relpath`
+
+Systemd files are rendered from Ansible templates and should not be edited directly on hosts.
+
 ## Current Signals (Baseline)
 
 - **Container health endpoint:** `overpass` is probed via `/api/status` in `infra/docker/docker-compose.yml`.
@@ -46,36 +60,40 @@ Monitoring is designed to answer:
 ### 3) Replication freshness heartbeat
 
 - Heartbeat monitor fed by `scripts/ops/monitor_replication.ts`.
-- SLO: lag must stay <= 1800 seconds (30 minutes).
-- Cadence: run check every 5 minutes.
+- SLO threshold comes from `monitoring_max_lag_seconds` (default: `300`, 5 minutes).
+- Cadence comes from `monitoring_timer_cadence` (default: `1m`).
 - If lag exceeds threshold or timestamp is invalid, the script exits non-zero and should not send success heartbeat.
 
-## Setup (Focused, Minimal)
+## Setup (Ansible-First)
 
 1. In OneUptime, create the two HTTP monitors and one SSL monitor above.
 2. In OneUptime, create a Heartbeat monitor and copy heartbeat URL(s).
-3. On host, place env values in `/etc/overpass/monitoring.env` (template in `infra/ops/systemd/monitoring.env.example`).
-4. Install `infra/ops/systemd/replication-monitor.service` and `infra/ops/systemd/replication-monitor.timer`.
-5. Enable timer:
+3. Set monitoring variables in `infra/ansible/group_vars/all.yml`:
+   - `monitoring_status_url`
+   - `monitoring_max_lag_seconds`
+   - `monitoring_heartbeat_url`
+   - `monitoring_heartbeat_fail_url`
+4. Apply Ansible site playbook:
 
 ```bash
-sudo systemctl daemon-reload
-sudo systemctl enable --now replication-monitor.timer
+ansible-playbook -i infra/ansible/inventory/hosts.yml infra/ansible/playbooks/site.yml
 ```
+
+This renders `/etc/overpass/monitoring.env`, installs `replication-monitor.service` and `replication-monitor.timer`, reloads systemd, and enables the timer.
 
 ## Script and Scheduler
 
 Run manually:
 
 ```bash
-bun scripts/ops/monitor_replication.ts --status-url https://<public-overpass-host>/api/status --max-lag-seconds 1800 --heartbeat-url https://monitoring.fixmycity.de/heartbeat/<success-token>
+bun scripts/ops/monitor_replication.ts --status-url https://<public-overpass-host>/api/status --max-lag-seconds 300 --heartbeat-url https://monitoring.fixmycity.de/heartbeat/<success-token>
 ```
 
-Systemd assets:
+Ansible-managed assets:
 
-- `infra/ops/systemd/replication-monitor.service`
-- `infra/ops/systemd/replication-monitor.timer`
-- `infra/ops/systemd/monitoring.env.example`
+- `infra/ansible/roles/monitoring/templates/replication-monitor.service.j2`
+- `infra/ansible/roles/monitoring/templates/replication-monitor.timer.j2`
+- `infra/ansible/roles/monitoring/templates/monitoring.env.j2`
 
 ## Fault-Injection Verification
 
@@ -86,10 +104,27 @@ Validate incident behavior after setup:
 3. **Replication lag test:** run monitor with strict threshold (`--max-lag-seconds 1`) and confirm heartbeat incident.
 4. **Recovery test:** restore normal threshold and verify incident auto-resolves after successful checks.
 
+## Automation Validation
+
+Use these checks during rollout:
+
+```bash
+ansible-playbook -i infra/ansible/inventory/hosts.yml infra/ansible/playbooks/site.yml --syntax-check
+ansible-playbook -i infra/ansible/inventory/hosts.yml infra/ansible/playbooks/site.yml --check
+```
+
+After apply, verify on host:
+
+```bash
+systemctl status replication-monitor.timer --no-pager
+systemctl list-timers | rg replication-monitor
+systemctl start replication-monitor.service && systemctl status replication-monitor.service --no-pager
+```
+
 ## Alert Policy
 
 - **P1:** public endpoint down or TLS invalid/expired.
-- **P2:** replication lag above 30 minutes.
+- **P2:** replication lag above 5 minutes.
 - **P3:** transient monitor execution failures without confirmed lag breach.
 
 Route all incidents to the shared ops alert channel plus on-call escalation.
