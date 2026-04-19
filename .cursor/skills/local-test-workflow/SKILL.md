@@ -30,7 +30,7 @@ Keep instructions brief and point to canonical docs for full operational detail.
 ### Fast smoke validation (recommended default)
 
 ```bash
-bun tests/smoke/run_smoke.ts
+bun --env-file=infra/docker/.env tests/smoke/run_smoke.ts
 ```
 
 Use this for most behavior changes that touch scripts, Overpass query flow, or replication checks.
@@ -55,8 +55,8 @@ Use this before handoff when multiple test areas may be affected.
 
 ```bash
 cp infra/docker/.env.example infra/docker/.env
-bun scripts/ops/download_extract.ts
-bun scripts/ops/start_stack.ts
+bun --env-file=infra/docker/.env scripts/ops/download_extract.ts
+bun --env-file=infra/docker/.env scripts/ops/start_stack.ts
 ```
 
 Then run the chosen test command.
@@ -64,7 +64,7 @@ Then run the chosen test command.
 For explicit Traefik URL testing:
 
 ```bash
-OVERPASS_BASE_URL="https://overpass.fixmycity.de" bun tests/smoke/run_smoke.ts
+OVERPASS_BASE_URL="https://overpass.fixmycity.de" bun --env-file=infra/docker/.env tests/smoke/run_smoke.ts
 ```
 
 ## Failure triage

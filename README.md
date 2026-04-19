@@ -25,9 +25,9 @@ This repository contains a Docker-first, reproducible setup for running an Overp
 
 ```bash
 cp infra/docker/.env.example infra/docker/.env
-bun run ops:download-extract
-bun run ops:start-stack
-bun run smoke:run
+bun --env-file=infra/docker/.env scripts/ops/download_extract.ts
+bun --env-file=infra/docker/.env scripts/ops/start_stack.ts
+bun --env-file=infra/docker/.env tests/smoke/run_smoke.ts
 ```
 
 For the full operational command set (manual verification, lag checks, stop flow), use `docs/ops/runbook.md`.

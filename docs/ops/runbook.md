@@ -16,30 +16,30 @@ Minimum required values for Traefik deployments:
 Required:
 
 - `OVERPASS_BASE_URL` (used by smoke and lag scripts)
-- `OVERPASS_EXTRACT_URL` (download source for `ops:download-extract`)
+- `OVERPASS_EXTRACT_URL` (download source for `scripts/ops/download_extract.ts`)
 
 ## 2) One-Time Germany Extract Cache
 
 ```bash
-bun run ops:download-extract
+bun --env-file=infra/docker/.env scripts/ops/download_extract.ts
 ```
 
 Optional explicit refresh:
 
 ```bash
-bun run ops:download-extract --force-refresh
+bun --env-file=infra/docker/.env scripts/ops/download_extract.ts --force-refresh
 ```
 
 Optional metadata refresh only (no full file download):
 
 ```bash
-bun run ops:download-extract --refresh-metadata
+bun --env-file=infra/docker/.env scripts/ops/download_extract.ts --refresh-metadata
 ```
 
 ## 3) Start Stack
 
 ```bash
-bun run ops:start-stack
+bun --env-file=infra/docker/.env scripts/ops/start_stack.ts
 ```
 
 This script creates `${TRAEFIK_ACME_ROOT}/acme.json` with restrictive permissions if missing.
@@ -47,29 +47,29 @@ This script creates `${TRAEFIK_ACME_ROOT}/acme.json` with restrictive permission
 ## 4) Verify Query And Update Signals
 
 ```bash
-bun run smoke:run
-bun run ops:check-update-lag
+bun --env-file=infra/docker/.env tests/smoke/run_smoke.ts
+bun --env-file=infra/docker/.env scripts/ops/check_update_lag.ts
 ```
 
 Manual checks (useful when isolating a failing smoke step):
 
 ```bash
-bun run smoke:offline
-bun run ops:verify-query
-bun run ops:check-replication
+bun --env-file=infra/docker/.env tests/smoke/offline_validation.ts
+bun --env-file=infra/docker/.env scripts/ops/verify_query.ts
+bun --env-file=infra/docker/.env scripts/ops/check_replication.ts
 ```
 
 For Traefik-only deployments, set an explicit base URL:
 
 ```bash
-OVERPASS_BASE_URL="https://overpass.fixmycity.de" bun run smoke:run
-OVERPASS_BASE_URL="https://overpass.fixmycity.de" bun run ops:check-update-lag
+OVERPASS_BASE_URL="https://overpass.fixmycity.de" bun --env-file=infra/docker/.env tests/smoke/run_smoke.ts
+OVERPASS_BASE_URL="https://overpass.fixmycity.de" bun --env-file=infra/docker/.env scripts/ops/check_update_lag.ts
 ```
 
 ## 5) Stop Stack
 
 ```bash
-bun run ops:stop-stack
+bun --env-file=infra/docker/.env scripts/ops/stop_stack.ts
 ```
 
 ## Recovery Notes
