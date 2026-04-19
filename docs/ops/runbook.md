@@ -13,32 +13,33 @@ Minimum required values for Traefik deployments:
 - `TRAEFIK_ACME_EMAIL`
 - `OVERPASS_ALLOWED_CIDRS`
 
-Optional:
+Required:
 
 - `OVERPASS_BASE_URL` (used by smoke and lag scripts)
+- `OVERPASS_EXTRACT_URL` (download source for `ops:download-extract`)
 
 ## 2) One-Time Germany Extract Cache
 
 ```bash
-bun scripts/ops/download_extract.ts
+bun run ops:download-extract
 ```
 
 Optional explicit refresh:
 
 ```bash
-bun scripts/ops/download_extract.ts --force-refresh
+bun run ops:download-extract --force-refresh
 ```
 
 Optional metadata refresh only (no full file download):
 
 ```bash
-bun scripts/ops/download_extract.ts --refresh-metadata
+bun run ops:download-extract --refresh-metadata
 ```
 
 ## 3) Start Stack
 
 ```bash
-bun scripts/ops/start_stack.ts
+bun run ops:start-stack
 ```
 
 This script creates `${TRAEFIK_ACME_ROOT}/acme.json` with restrictive permissions if missing.
@@ -46,29 +47,29 @@ This script creates `${TRAEFIK_ACME_ROOT}/acme.json` with restrictive permission
 ## 4) Verify Query And Update Signals
 
 ```bash
-bun tests/smoke/run_smoke.ts
-bun scripts/ops/check_update_lag.ts
+bun run smoke:run
+bun run ops:check-update-lag
 ```
 
 Manual checks (useful when isolating a failing smoke step):
 
 ```bash
-bun tests/smoke/offline_validation.ts
-bun scripts/ops/verify_query.ts
-bun scripts/ops/check_replication.ts
+bun run smoke:offline
+bun run ops:verify-query
+bun run ops:check-replication
 ```
 
 For Traefik-only deployments, set an explicit base URL:
 
 ```bash
-OVERPASS_BASE_URL="https://overpass.fixmycity.de" bun tests/smoke/run_smoke.ts
-OVERPASS_BASE_URL="https://overpass.fixmycity.de" bun scripts/ops/check_update_lag.ts
+OVERPASS_BASE_URL="https://overpass.fixmycity.de" bun run smoke:run
+OVERPASS_BASE_URL="https://overpass.fixmycity.de" bun run ops:check-update-lag
 ```
 
 ## 5) Stop Stack
 
 ```bash
-bun scripts/ops/stop_stack.ts
+bun run ops:stop-stack
 ```
 
 ## Recovery Notes

@@ -1,9 +1,11 @@
 #!/usr/bin/env bun
 
 import { test, expect } from "bun:test";
+import { getRuntimeTestEnv } from "../../scripts/config/env";
 
-const containerName = process.env.OVERPASS_CONTAINER_NAME ?? "overpass_de";
-const waitMs = Number(process.env.OVERPASS_REPLICATION_WAIT_MS ?? "65000");
+const { OVERPASS_CONTAINER_NAME, OVERPASS_REPLICATION_WAIT_MS } = getRuntimeTestEnv();
+const containerName = OVERPASS_CONTAINER_NAME;
+const waitMs = OVERPASS_REPLICATION_WAIT_MS;
 const query = "[out:json];node(1);out;";
 const { $ } = Bun;
 

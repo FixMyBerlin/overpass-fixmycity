@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 
 import { $ } from "bun";
+import { getInstallBunEnv } from "../config/env";
 
 $.throws(true);
 
@@ -13,7 +14,8 @@ if (Bun.which("bun")) {
 // Official one-liner from bun.sh installation docs.
 await $`bash -c "curl -fsSL https://bun.sh/install | bash"`;
 
-const bunBin = `${process.env.HOME ?? ""}/.bun/bin/bun`;
+const { HOME } = getInstallBunEnv();
+const bunBin = `${HOME}/.bun/bin/bun`;
 const checkVersion = await $`${bunBin} --version`.nothrow().text();
 if (checkVersion.trim()) {
   console.log(`Installed Bun v${checkVersion.trim()} at ${bunBin}.`);

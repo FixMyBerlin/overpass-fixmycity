@@ -3,7 +3,8 @@
 import { $ } from "bun";
 import { basename, join } from "node:path";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
-import { ROOT_DIR, loadEnv, log, requireCommand, setEnvVar, withBackoff } from "./lib";
+import { getExtractSourceEnv, getOpsPathsEnv } from "../config/env";
+import { log, requireCommand, setEnvVar, withBackoff } from "./lib";
 
 $.throws(true);
 
@@ -14,7 +15,6 @@ requireCommand("osmium");
 const args = Bun.argv.slice(2);
 let forceRefresh = false;
 let refreshMetadata = false;
-let extractUrl = "https://download.geofabrik.de/europe/germany-latest.osm.bz2";
 
 for (let i = 0; i < args.length; i += 1) {
   const arg = args[i];
@@ -26,22 +26,14 @@ for (let i = 0; i < args.length; i += 1) {
     refreshMetadata = true;
     continue;
   }
-  if (arg === "--extract-url") {
-    const value = args[i + 1];
-    if (!value) {
-      throw new Error("--extract-url requires a value");
-    }
-    extractUrl = value;
-    i += 1;
-    continue;
-  }
   throw new Error(`Unknown argument: ${arg}`);
 }
 
-loadEnv();
+const { OVERPASS_CACHE_ROOT } = getOpsPathsEnv();
+const { OVERPASS_EXTRACT_URL } = getExtractSourceEnv();
+const extractUrl = OVERPASS_EXTRACT_URL;
 
-const cacheRoot = process.env.OVERPASS_CACHE_ROOT ?? join(ROOT_DIR, ".local/cache");
-const artifactDir = join(cacheRoot, "extracts");
+const artifactDir = join(OVERPASS_CACHE_ROOT, "extracts");
 const fileName = basename(extractUrl);
 const manifestFile = join(artifactDir, `${fileName}.manifest`);
 const extractFile = join(artifactDir, fileName);

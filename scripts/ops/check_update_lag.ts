@@ -1,14 +1,15 @@
 #!/usr/bin/env bun
 
 import { $ } from "bun";
+import { getOverpassBaseUrlEnv } from "../config/env";
 import { requireCommand } from "./lib";
 
 $.throws(true);
 
 requireCommand("curl");
 
-const defaultBaseUrl = process.env.OVERPASS_BASE_URL?.trim() || "http://127.0.0.1:8080";
-const statusUrl = Bun.argv[2] ?? `${defaultBaseUrl.replace(/\/+$/, "")}/api/status`;
+const { OVERPASS_BASE_URL } = getOverpassBaseUrlEnv();
+const statusUrl = `${OVERPASS_BASE_URL}/api/status`;
 const raw = await $`curl -sS ${statusUrl}`.text();
 
 const match = raw.match(/(?:timestamp_osm_base=|osm_base=")([0-9T:\-Z]+)(?:"|$)/);

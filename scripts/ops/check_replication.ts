@@ -1,13 +1,15 @@
 #!/usr/bin/env bun
 
 import { $ } from "bun";
+import { getOverpassBaseUrlEnv } from "../config/env";
 import { log, requireCommand } from "./lib";
 
 $.throws(true);
 
 requireCommand("curl");
 
-const overpassUrl = Bun.argv[2] ?? "http://127.0.0.1:8080/api/interpreter";
+const { OVERPASS_BASE_URL } = getOverpassBaseUrlEnv();
+const overpassUrl = `${OVERPASS_BASE_URL}/api/interpreter`;
 const query = "[out:json];node(1);out;";
 
 log(`Checking replication timestamps from ${overpassUrl}`);

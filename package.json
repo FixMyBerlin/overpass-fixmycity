@@ -3,15 +3,15 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "bun test",
-    "ops:download-extract": "bun scripts/ops/download_extract.ts",
-    "ops:start-stack": "bun scripts/ops/start_stack.ts",
-    "ops:stop-stack": "bun scripts/ops/stop_stack.ts",
-    "ops:verify-query": "bun scripts/ops/verify_query.ts",
-    "ops:check-replication": "bun scripts/ops/check_replication.ts",
-    "ops:check-update-lag": "bun scripts/ops/check_update_lag.ts",
-    "smoke:offline": "bun tests/smoke/offline_validation.ts",
-    "smoke:run": "bun tests/smoke/run_smoke.ts",
+    "test": "bun --env-file=infra/docker/.env test",
+    "ops:download-extract": "bun --env-file=infra/docker/.env scripts/ops/download_extract.ts",
+    "ops:start-stack": "bun --env-file=infra/docker/.env scripts/ops/start_stack.ts",
+    "ops:stop-stack": "bun --env-file=infra/docker/.env scripts/ops/stop_stack.ts",
+    "ops:verify-query": "bun --env-file=infra/docker/.env scripts/ops/verify_query.ts",
+    "ops:check-replication": "bun --env-file=infra/docker/.env scripts/ops/check_replication.ts",
+    "ops:check-update-lag": "bun --env-file=infra/docker/.env scripts/ops/check_update_lag.ts",
+    "smoke:offline": "bun --env-file=infra/docker/.env tests/smoke/offline_validation.ts",
+    "smoke:run": "bun --env-file=infra/docker/.env tests/smoke/run_smoke.ts",
     "bootstrap:host": "bun scripts/bootstrap/bootstrap_host.ts",
     "bootstrap:install-bun": "bun scripts/bootstrap/install_bun.ts",
     "format": "oxfmt --write .",
@@ -19,6 +19,9 @@
     "lint": "oxlint --deny-warnings --ignore-path .gitignore .",
     "lint:fix": "oxlint --fix --ignore-path .gitignore .",
     "check": "bun run format:check && bun run lint"
+  },
+  "dependencies": {
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "oxfmt": "^0.45.0",

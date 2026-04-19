@@ -3,32 +3,23 @@
 import { $ } from "bun";
 import { chmodSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { ENV_FILE, ROOT_DIR, loadEnv, log, requireCommand } from "./lib";
+import { getOpsPathsEnv, getOverpassPlanetEnv } from "../config/env";
+import { ENV_FILE, ROOT_DIR, log, requireCommand } from "./lib";
 
 $.throws(true);
 
 requireCommand("docker");
-loadEnv();
+const { OVERPASS_DATA_ROOT, OVERPASS_CACHE_ROOT, TRAEFIK_ACME_ROOT } = getOpsPathsEnv();
+getOverpassPlanetEnv();
 
-if (!process.env.OVERPASS_PLANET_URL) {
-  throw new Error("OVERPASS_PLANET_URL is empty. Run scripts/ops/download_extract.ts first.");
-}
-
-mkdirSync(
-  path.join(process.env.OVERPASS_DATA_ROOT ?? path.join(ROOT_DIR, ".local/overpass-data"), "db"),
-  {
-    recursive: true,
-  },
-);
-mkdirSync(
-  path.join(process.env.OVERPASS_CACHE_ROOT ?? path.join(ROOT_DIR, ".local/cache"), "extracts"),
-  {
-    recursive: true,
-  },
-);
-const traefikRoot = process.env.TRAEFIK_ACME_ROOT ?? path.join(ROOT_DIR, ".local/traefik");
-mkdirSync(traefikRoot, { recursive: true });
-const acmeFile = path.join(traefikRoot, "acme.json");
+mkdirSync(path.join(OVERPASS_DATA_ROOT, "db"), {
+  recursive: true,
+});
+mkdirSync(path.join(OVERPASS_CACHE_ROOT, "extracts"), {
+  recursive: true,
+});
+mkdirSync(TRAEFIK_ACME_ROOT, { recursive: true });
+const acmeFile = path.join(TRAEFIK_ACME_ROOT, "acme.json");
 if (!existsSync(acmeFile)) {
   writeFileSync(acmeFile, "", "utf8");
 }

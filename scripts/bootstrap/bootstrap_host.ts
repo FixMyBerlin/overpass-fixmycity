@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 
 import { $ } from "bun";
+import { getBootstrapHostEnv } from "../config/env";
 
 $.throws(true);
 
@@ -15,7 +16,7 @@ if (!Bun.which("apt-get")) {
 
 const overpassGroup = "overpassops";
 const overpassUser = "overpasssvc";
-const invokingUser = process.env.SUDO_USER ?? process.env.USER ?? "";
+const { invokingUser } = getBootstrapHostEnv();
 
 await $`apt-get update`;
 await $`apt-get install -y docker.io docker-compose-plugin curl wget ca-certificates`;
@@ -30,9 +31,7 @@ if (!userExists) {
   await $`useradd --system --create-home --gid ${overpassGroup} --shell /usr/sbin/nologin ${overpassUser}`;
 }
 
-if (invokingUser) {
-  await $`usermod -aG docker ${invokingUser}`;
-}
+await $`usermod -aG docker ${invokingUser}`;
 await $`systemctl enable docker`;
 await $`systemctl start docker`;
 

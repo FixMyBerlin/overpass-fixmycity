@@ -2,12 +2,13 @@
 
 import { $ } from "bun";
 import path from "node:path";
+import { getOverpassBaseUrlEnv } from "../../scripts/config/env";
 
 $.throws(true);
 
 const rootDir = path.resolve(import.meta.dir, "../..");
-const defaultBaseUrl = process.env.OVERPASS_BASE_URL?.trim() || "http://127.0.0.1:8080";
-const interpreterUrl = Bun.argv[2] ?? `${defaultBaseUrl.replace(/\/+$/, "")}/api/interpreter`;
+const { OVERPASS_BASE_URL } = getOverpassBaseUrlEnv();
+const interpreterUrl = `${OVERPASS_BASE_URL}/api/interpreter`;
 
 await $`bun ${path.join(rootDir, "tests/smoke/offline_validation.ts")}`;
 await $`bun ${path.join(rootDir, "scripts/ops/verify_query.ts")} ${interpreterUrl}`;

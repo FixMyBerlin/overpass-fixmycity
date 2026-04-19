@@ -19,24 +19,6 @@ export function ensureEnvFile(): void {
   }
 }
 
-export function loadEnv(): void {
-  ensureEnvFile();
-  const lines = readFileSync(ENV_FILE, "utf8").split(/\r?\n/);
-  for (const rawLine of lines) {
-    const line = rawLine.trim();
-    if (!line || line.startsWith("#")) continue;
-
-    const eqIdx = line.indexOf("=");
-    if (eqIdx < 0) continue;
-
-    const key = line.slice(0, eqIdx).trim();
-    const value = line.slice(eqIdx + 1);
-    if (key) {
-      process.env[key] = value;
-    }
-  }
-}
-
 export function setEnvVar(key: string, value: string): void {
   ensureEnvFile();
 
