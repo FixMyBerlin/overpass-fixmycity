@@ -16,11 +16,12 @@ External references:
 
 ## Current Scenario (Cleaned Up)
 
-- The service is not planned as a broadly promoted public API.
-- In practice, usage can still come from a mixed user set (internal apps and ad-hoc users).
-- Initial rollout prioritizes low friction, so access should stay simple and easy to use.
+- The service is intentionally publicly accessible for broad software compatibility.
+- FMC is the primary owner/consumer, but endpoint reachability is not FMC-only.
+- Usage can come from a mixed user set (FMC apps, partner apps, ad-hoc users).
+- Access should stay simple and easy to use for external software clients.
 - The primary dataset is Germany only (configured through `OVERPASS_PLANET_URL`), which lowers but does not remove misuse risk.
-- Existing controls are ingress-first (Traefik routing, allowlist options, and proxy timeouts).
+- Existing controls are ingress-first (Traefik routing, optional allowlist settings, and proxy timeouts).
 
 ## Challenge To The Scenario
 
@@ -29,7 +30,7 @@ The assumptions are reasonable, but they can fail in specific ways:
 - "Not promoted" does not guarantee "not discovered." Traffic can still spike from shared links, tooling defaults, or accidental loops.
 - "Germany-only" reduces very large global scans, but many expensive local/area queries are still possible.
 - "Easy access" without any fairness guard means one or two noisy clients can degrade service for all users.
-- Ingress-only controls (allowlist/timeouts) protect perimeter and connection behavior, but they do not fully enforce per-query fairness inside Overpass.
+- Ingress-only controls (timeouts and perimeter options) protect connection behavior, but they do not fully enforce per-query fairness inside Overpass.
 
 ## Knob-by-Knob Evaluation
 

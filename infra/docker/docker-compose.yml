@@ -59,7 +59,7 @@ services:
       traefik.http.routers.overpass.entrypoints: websecure
       traefik.http.routers.overpass.tls: true
       traefik.http.routers.overpass.tls.certresolver: letsencrypt
-      traefik.http.middlewares.overpass-ipallowlist.ipallowlist.sourcerange: ${OVERPASS_ALLOWED_CIDRS:-127.0.0.1/32}
+      traefik.http.middlewares.overpass-ipallowlist.ipallowlist.sourcerange: ${OVERPASS_ALLOWED_CIDRS:-0.0.0.0/0,::/0}
       traefik.http.routers.overpass.middlewares: overpass-ipallowlist@docker
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost/api/status || exit 1"]

@@ -20,7 +20,10 @@ Minimum required values for Traefik deployments:
 
 - `OVERPASS_DOMAIN`
 - `TRAEFIK_ACME_EMAIL`
-- `OVERPASS_ALLOWED_CIDRS`
+
+Optional value for restricted deployments:
+
+- `OVERPASS_ALLOWED_CIDRS` (default is public access via `0.0.0.0/0,::/0`)
 
 Required:
 

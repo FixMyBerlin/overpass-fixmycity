@@ -6,7 +6,7 @@ This is the single source of truth for monitoring this Overpass service with the
 
 Monitoring is designed to answer:
 
-- Is the public service reachable and responding?
+- Is the publicly accessible service endpoint reachable and responding?
 - Is TLS still valid?
 - Is replication still advancing within our SLO?
 
@@ -123,7 +123,7 @@ systemctl start replication-monitor.service && systemctl status replication-moni
 
 ## Alert Policy
 
-- **P1:** public endpoint down or TLS invalid/expired.
+- **P1:** publicly accessible endpoint down or TLS invalid/expired.
 - **P2:** replication lag above 5 minutes.
 - **P3:** transient monitor execution failures without confirmed lag breach.
 

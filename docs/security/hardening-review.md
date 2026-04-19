@@ -3,7 +3,7 @@
 ## Security Checklist
 
 - Keep `--providers.docker.exposedbydefault=false` so only explicitly labeled services are exposed by Traefik.
-- Enforce source restrictions with Traefik IP allowlist middleware (`OVERPASS_ALLOWED_CIDRS`).
+- Keep publicly accessible ingress explicit and controlled: default `OVERPASS_ALLOWED_CIDRS=0.0.0.0/0,::/0`; narrow it only for intentionally restricted deployments.
 - Keep Traefik dashboard/API disabled by default (`TRAEFIK_DASHBOARD=false`, `TRAEFIK_API_INSECURE=false`).
 - Use ACME with valid DNS and keep `acme.json` outside the repository (`TRAEFIK_ACME_ROOT`).
 - Avoid embedding secrets in compose files; use environment files or secret stores.
