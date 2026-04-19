@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "test": "bun test",
     "ops:download-extract": "bun scripts/ops/download_extract.ts",
     "ops:start-stack": "bun scripts/ops/start_stack.ts",
     "ops:stop-stack": "bun scripts/ops/stop_stack.ts",

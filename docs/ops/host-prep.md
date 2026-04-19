@@ -11,8 +11,10 @@ Prepare a Docker host for running the Overpass stack with low operational risk a
 3. Reserve persistent directories for:
    - Overpass DB data (`OVERPASS_DATA_ROOT`)
    - Local extract cache (`OVERPASS_CACHE_ROOT`)
-   - TLS material for proxy (`OVERPASS_DATA_ROOT/tls`)
+   - Traefik ACME storage (`TRAEFIK_ACME_ROOT`, includes `acme.json`)
 4. Ensure firewall defaults deny inbound except explicitly allowed endpoints.
+5. Ensure DNS for `OVERPASS_DOMAIN` points to the host before first deployment so ACME issuance succeeds.
+6. Allow inbound TCP `80` and `443` for Traefik entrypoints.
 
 ## External Impact Policy
 

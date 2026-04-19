@@ -11,7 +11,7 @@
 
 | Option | Security Strength | Ops Complexity | App Compatibility | Maintenance | Notes |
 |---|---|---|---|---|---|
-| Proxy IP allow-list | Medium | Low | Medium | Low | Fastest to adopt, but weak for mobile/dynamic client IPs. |
+| Traefik IP allowlist middleware | Medium | Low | Medium | Low | Fastest to adopt, but weak for mobile/dynamic client IPs. |
 | Private network/VPN | High | Medium | Medium | Medium | Strong boundary; requires network client setup. |
 | mTLS between client and gateway | High | Medium-High | Medium | Medium-High | Strong identity, cert lifecycle overhead. |
 | Token gateway in front of Overpass | Medium-High | High | High | High | Flexible for app auth, adds custom service complexity. |
@@ -20,8 +20,8 @@
 ## Recommended Default
 
 1. Private network/VPN for service boundary.
-2. Proxy IP allow-list as immediate short-term hardening.
+2. Traefik IP allowlist middleware as immediate short-term hardening.
 
 ## Recommended Fallback
 
-mTLS on reverse proxy if VPN rollout is not feasible for all consumers.
+mTLS at ingress if VPN rollout is not feasible for all consumers.

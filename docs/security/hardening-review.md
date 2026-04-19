@@ -2,9 +2,10 @@
 
 ## Security Checklist
 
-- Run Overpass and proxy with minimal exposed interfaces (`127.0.0.1` binding by default).
-- Keep proxy in default-deny mode and only add explicit allow-list entries.
-- Store TLS materials outside the repository and mount read-only.
+- Keep `--providers.docker.exposedbydefault=false` so only explicitly labeled services are exposed by Traefik.
+- Enforce source restrictions with Traefik IP allowlist middleware (`OVERPASS_ALLOWED_CIDRS`).
+- Keep Traefik dashboard/API disabled by default (`TRAEFIK_DASHBOARD=false`, `TRAEFIK_API_INSECURE=false`).
+- Use ACME with valid DNS and keep `acme.json` outside the repository (`TRAEFIK_ACME_ROOT`).
 - Avoid embedding secrets in compose files; use environment files or secret stores.
 - Restrict host SSH, enforce key-based auth, and apply OS patching cadence.
 
@@ -13,6 +14,7 @@
 - Track import wall time and update lag from logs.
 - Confirm SSD/NVMe throughput is sufficient to keep update lag bounded.
 - Keep free disk headroom and monitor DB growth over time.
+- Keep Traefik responding timeouts aligned with Overpass long queries (`TRAEFIK_READ_TIMEOUT`, `TRAEFIK_WRITE_TIMEOUT`).
 - Set container memory/CPU limits in production once baseline metrics are known.
 
 ## Code Hygiene Checklist

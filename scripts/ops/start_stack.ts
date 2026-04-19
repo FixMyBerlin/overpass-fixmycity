@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
 import { $ } from "bun";
-import { mkdirSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { ENV_FILE, ROOT_DIR, loadEnv, log, requireCommand } from "./lib";
 
@@ -20,6 +20,13 @@ mkdirSync(path.join(process.env.OVERPASS_DATA_ROOT ?? path.join(ROOT_DIR, ".loca
 mkdirSync(path.join(process.env.OVERPASS_CACHE_ROOT ?? path.join(ROOT_DIR, ".local/cache"), "extracts"), {
   recursive: true,
 });
+const traefikRoot = process.env.TRAEFIK_ACME_ROOT ?? path.join(ROOT_DIR, ".local/traefik");
+mkdirSync(traefikRoot, { recursive: true });
+const acmeFile = path.join(traefikRoot, "acme.json");
+if (!existsSync(acmeFile)) {
+  writeFileSync(acmeFile, "", "utf8");
+}
+chmodSync(acmeFile, 0o600);
 
 const composeArgs = [
   "--env-file",

@@ -1,4 +1,34 @@
 services:
+  traefik:
+    image: traefik:v3.6
+    container_name: overpass_traefik
+    restart: unless-stopped
+    command:
+      - "--log.level=${TRAEFIK_LOG_LEVEL:-WARN}"
+      - "--api.insecure=${TRAEFIK_API_INSECURE:-false}"
+      - "--api.dashboard=${TRAEFIK_DASHBOARD:-false}"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+      - "--entrypoints.websecure.transport.respondingTimeouts.readTimeout=${TRAEFIK_READ_TIMEOUT:-300s}"
+      - "--entrypoints.websecure.transport.respondingTimeouts.writeTimeout=${TRAEFIK_WRITE_TIMEOUT:-300s}"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.letsencrypt.acme.email=${TRAEFIK_ACME_EMAIL:-}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      - "--serversTransport.forwardingTimeouts.dialTimeout=${TRAEFIK_DIAL_TIMEOUT:-100s}"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ${TRAEFIK_ACME_ROOT:-./.local/traefik}:/letsencrypt
+    networks:
+      - overpass_net
+
   overpass:
     image: openzonedev/overpass-api:0.7.57.2
     container_name: overpass_de
@@ -18,29 +48,21 @@ services:
     volumes:
       - ${OVERPASS_DATA_ROOT:-./.local/overpass-data}/db:/db
       - ${OVERPASS_CACHE_ROOT:-./.local/cache}:/cache
-    ports:
-      - "${OVERPASS_BIND_IP:-127.0.0.1}:${OVERPASS_BIND_PORT:-8080}:80"
+    labels:
+      traefik.enable: true
+      traefik.http.services.overpass.loadbalancer.server.port: 80
+      traefik.http.routers.overpass.rule: Host(`${OVERPASS_DOMAIN}`)
+      traefik.http.routers.overpass.entrypoints: websecure
+      traefik.http.routers.overpass.tls: true
+      traefik.http.routers.overpass.tls.certresolver: letsencrypt
+      traefik.http.middlewares.overpass-ipallowlist.ipallowlist.sourcerange: ${OVERPASS_ALLOWED_CIDRS:-127.0.0.1/32}
+      traefik.http.routers.overpass.middlewares: overpass-ipallowlist@docker
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost/api/status || exit 1"]
       interval: 60s
       timeout: 10s
       retries: 5
       start_period: 300s
-    networks:
-      - overpass_net
-
-  proxy:
-    image: nginx:1.27-alpine
-    container_name: overpass_proxy
-    restart: unless-stopped
-    depends_on:
-      overpass:
-        condition: service_started
-    ports:
-      - "${PROXY_BIND_IP:-127.0.0.1}:${PROXY_BIND_PORT:-8443}:443"
-    volumes:
-      - ../proxy/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ${OVERPASS_DATA_ROOT:-./.local/overpass-data}/tls:/etc/nginx/tls:ro
     networks:
       - overpass_net
 
