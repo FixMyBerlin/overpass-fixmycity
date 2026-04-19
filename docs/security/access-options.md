@@ -25,3 +25,7 @@
 ## Recommended Fallback
 
 mTLS at ingress if VPN rollout is not feasible for all consumers.
+
+## Related Guidance
+
+- For an ingress-first versus Overpass-internal knob decision framework, see `docs/security/overpass-resource-policy-evaluation.md`.

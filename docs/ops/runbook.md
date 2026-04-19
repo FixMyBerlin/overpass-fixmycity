@@ -20,6 +20,8 @@ Required:
 - `OVERPASS_BASE_URL` (used by smoke and lag scripts)
 - `OVERPASS_EXTRACT_URL` (download source for `scripts/ops/download_extract.ts`)
 
+For rationale on keeping most Overpass internal query-resource knobs unset by default, see `docs/security/overpass-resource-policy-evaluation.md`.
+
 ## 2) One-Time Germany Extract Cache
 
 ```bash

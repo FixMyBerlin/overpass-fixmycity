@@ -16,6 +16,7 @@
 - Keep free disk headroom and monitor DB growth over time.
 - Keep Traefik responding timeouts aligned with Overpass long queries (`TRAEFIK_READ_TIMEOUT`, `TRAEFIK_WRITE_TIMEOUT`).
 - Set container memory/CPU limits in production once baseline metrics are known.
+- For Overpass internal query-limit knob evaluation (`OVERPASS_RATE_LIMIT`, `OVERPASS_TIME`, `OVERPASS_SPACE`), see `docs/security/overpass-resource-policy-evaluation.md`.
 
 ## Code Hygiene Checklist
 
