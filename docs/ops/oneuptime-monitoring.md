@@ -16,6 +16,13 @@ Monitoring is designed to answer:
 - **Replication lag signal:** `scripts/ops/check_update_lag.ts` extracts `timestamp_osm_base` and computes `lag_seconds`.
 - **Replication monotonicity signal:** `scripts/ops/check_replication.ts` confirms timestamps do not move backwards.
 
+## Signal Ownership (Simple)
+
+- **External OneUptime monitors and heartbeat are the paging/incident source of truth.**
+- **Docker container health is local diagnostics for operators** (for example, quick status in `docker compose ps` while troubleshooting on the host).
+- A container becoming `unhealthy` by itself should not be treated as a paging incident unless external monitors also show customer impact.
+- This separation keeps alerting focused on real external impact and replication freshness, while preserving fast local debugging signals.
+
 ## OneUptime Features Used For This Service
 
 ### 1) HTTP uptime checks

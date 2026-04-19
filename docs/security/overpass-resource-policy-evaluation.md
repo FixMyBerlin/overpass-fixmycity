@@ -70,6 +70,26 @@ The assumptions are reasonable, but they can fail in specific ways:
 - Why no: current Traefik timeout settings already bound end-user request duration.
 - When yes becomes meaningful: explicit timeout alignment policy is needed across client -> Traefik -> container nginx.
 
+### `OVERPASS_HEALTHCHECK`
+
+- What it does: overrides the image-default Docker healthcheck command.
+- Use now: no (keep current Compose healthcheck command).
+- Why no: this workspace already uses a simple local liveness probe in Compose plus external OneUptime and replication monitors for incident/SLO decisions.
+- When yes becomes meaningful: you need deeper container-local validation of interpreter behavior and are willing to manage a more complex health command.
+- Local behavior in this workspace is documented in `docs/ops/oneuptime-monitoring.md` under "Current Signals (Baseline)" and "Signal Ownership (Simple)".
+
+Upstream image-default behavior (from `wiktorn/Overpass-API`):
+
+- Command path: `/app/docker-healthcheck.sh`
+- Default check: query `http://localhost/api/interpreter?...`, parse JSON with `jq`, and verify Overpass generator output.
+- Startup grace: image sets `HEALTHCHECK --start-period=48h`.
+
+Difference summary:
+
+- Compose check is simpler and lower-noise (`/api/status` reachability).
+- Upstream check is deeper but more complex (interpreter query + parsing).
+- We use external monitoring to decide incidents/pages; Docker health is for local debugging status.
+
 ## Recommended Baseline For This Workspace
 
 - Keep unset by default:
@@ -77,6 +97,7 @@ The assumptions are reasonable, but they can fail in specific ways:
   - `OVERPASS_TIME`
   - `OVERPASS_SPACE`
   - `OVERPASS_MAX_TIMEOUT`
+  - `OVERPASS_HEALTHCHECK`
 - Enable `OVERPASS_RATE_LIMIT` by default as the first and only Overpass-internal safeguard:
   - Deployment baseline: `OVERPASS_RATE_LIMIT=2`
   - Revisit if observed traffic is strictly trusted/internal and 429 behavior is undesirable.
