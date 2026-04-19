@@ -28,6 +28,7 @@ Prepare a Docker host for running the Overpass stack with low operational risk a
 For Debian/Ubuntu hosts:
 
 ```bash
+sudo bun scripts/bootstrap/install_bun.ts
 sudo bun scripts/bootstrap/bootstrap_host.ts
 ```
 

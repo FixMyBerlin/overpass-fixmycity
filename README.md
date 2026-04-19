@@ -29,3 +29,5 @@ bun scripts/ops/download_extract.ts
 bun scripts/ops/start_stack.ts
 bun tests/smoke/run_smoke.ts
 ```
+
+For the full operational command set (manual verification, lag checks, stop flow), use `docs/ops/runbook.md`.

@@ -50,6 +50,14 @@ bun tests/smoke/run_smoke.ts
 bun scripts/ops/check_update_lag.ts
 ```
 
+Manual checks (useful when isolating a failing smoke step):
+
+```bash
+bun tests/smoke/offline_validation.ts
+bun scripts/ops/verify_query.ts
+bun scripts/ops/check_replication.ts
+```
+
 For Traefik-only deployments, set an explicit base URL:
 
 ```bash
