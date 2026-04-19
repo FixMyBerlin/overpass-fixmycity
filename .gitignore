@@ -1,0 +1,3 @@
+.local/
+infra/docker/.env
+*.log
