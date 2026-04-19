@@ -16,4 +16,5 @@ Overpass database files can grow significantly beyond input extract size. Update
 
 - Keep at least 30% free disk space to avoid compaction/update stress.
 - Track import duration and update lag as part of acceptance gates.
+- Docker Compose log retention defaults are `json-file` with `max-size: 20m` and `max-file: "5"` per container (approximately 100 MB per service before rotation), and should be included in host disk budgeting.
 - For history/attic enablement, plan a substantial increase in disk and RAM.

@@ -1,8 +1,15 @@
+x-logging-defaults: &logging-defaults
+  driver: json-file
+  options:
+    max-size: 20m
+    max-file: "5"
+
 services:
   traefik:
     image: traefik:v3.6
     container_name: overpass_traefik
     restart: unless-stopped
+    logging: *logging-defaults
     command:
       - "--log.level=${TRAEFIK_LOG_LEVEL:-WARN}"
       - "--api.insecure=${TRAEFIK_API_INSECURE:-false}"
@@ -34,6 +41,7 @@ services:
     platform: linux/amd64
     container_name: overpass_de
     restart: unless-stopped
+    logging: *logging-defaults
     environment:
       OVERPASS_META: ${OVERPASS_META:-no}
       OVERPASS_MODE: ${OVERPASS_MODE:-init}

@@ -134,3 +134,21 @@ bun --env-file=infra/docker/.env scripts/ops/stop_stack.ts
 - Increase Traefik logging temporarily by setting `TRAEFIK_LOG_LEVEL=INFO`.
 - Keep dashboard disabled in normal operation; if temporarily enabling it, also keep `TRAEFIK_API_INSECURE=false` and expose access only through host firewall policy.
 - Confirm only intended services are public by checking `traefik.enable` labels and `--providers.docker.exposedbydefault=false`.
+
+## Log Retention Defaults
+
+- Compose sets Docker `json-file` logging for all services with `max-size: 20m` and `max-file: "5"` (about 100 MB max per container before older logs rotate out).
+- Inspect the resolved Compose config to confirm logging policy:
+
+  ```bash
+  docker compose --env-file infra/docker/.env -f infra/docker/docker-compose.yml config
+  ```
+
+- Inspect a running container to confirm active log driver and options:
+
+  ```bash
+  docker inspect overpass_de --format '{{.HostConfig.LogConfig.Type}} {{json .HostConfig.LogConfig.Config}}'
+  docker inspect overpass_traefik --format '{{.HostConfig.LogConfig.Type}} {{json .HostConfig.LogConfig.Config}}'
+  ```
+
+- If you temporarily increase Traefik verbosity for troubleshooting, revert `TRAEFIK_LOG_LEVEL` after the incident to reduce log volume and disk churn.
