@@ -1,0 +1,12 @@
+[Unit]
+Description=Run Overpass replication monitor on schedule
+
+[Timer]
+OnBootSec={{ monitoring_on_boot_delay }}
+OnUnitActiveSec={{ monitoring_timer_cadence }}
+AccuracySec={{ monitoring_accuracy }}
+Unit={{ monitoring_service_name }}
+Persistent=true
+
+[Install]
+WantedBy=timers.target

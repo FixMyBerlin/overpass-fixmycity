@@ -4,6 +4,28 @@
 
 Prepare a Docker host for running the Overpass stack with low operational risk and minimal external-service impact.
 
+## Default Provisioning Path (Ansible)
+
+Use the in-repo Ansible automation as the default provisioning and reconciliation path.
+
+1. Configure host and variables:
+   - `infra/ansible/inventory/hosts.yml`
+   - `infra/ansible/group_vars/all.yml`
+2. Run site playbook:
+
+```bash
+ansible-playbook -i infra/ansible/inventory/hosts.yml infra/ansible/playbooks/site.yml
+```
+
+The site playbook applies:
+
+- baseline host package update/install
+- Docker install and service enable/start
+- required users/groups and host paths
+- monitoring env + `replication-monitor` systemd unit/timer deployment
+
+For validation and dry-run commands, use `infra/ansible/README.md`.
+
 ## Required Host Setup
 
 1. Install Docker Engine and Compose plugin.
@@ -22,14 +44,3 @@ Prepare a Docker host for running the Overpass stack with low operational risk a
 - Avoid deleting `/db` (or running `docker compose down -v`) for normal local iteration.
 - Prefer local DB snapshots/volume restore for iterative testing.
 - Avoid aggressive retry loops and keep bounded backoff in update tooling.
-
-## Bootstrap Option
-
-For Debian/Ubuntu hosts:
-
-```bash
-sudo bun scripts/bootstrap/install_bun.ts
-sudo bun scripts/bootstrap/bootstrap_host.ts
-```
-
-Review and adapt user/group names before running on production hosts.

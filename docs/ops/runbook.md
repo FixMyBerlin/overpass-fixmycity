@@ -1,6 +1,13 @@
 # Operations Runbook
 
 Monitoring configuration and incident policy are maintained in `docs/ops/oneuptime-monitoring.md`.
+Host baseline and monitoring reconciliation are managed with Ansible in `infra/ansible/`.
+
+Re-apply host + monitoring state:
+
+```bash
+ansible-playbook -i infra/ansible/inventory/hosts.yml infra/ansible/playbooks/site.yml
+```
 
 ## 1) Initialize Environment
 

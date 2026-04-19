@@ -7,9 +7,8 @@ This repository contains a Docker-first, reproducible setup for running an Overp
 - `docs/research/`: findings and architecture decisions.
 - `docs/ops/`: sizing, host prep, runbook.
 - `docs/security/`: hardening notes and access-control evaluation.
+- `infra/ansible/`: host and monitoring automation playbooks/roles.
 - `infra/docker/`: compose stack and environment template.
-- `infra/proxy/`: reverse proxy config.
-- `scripts/bootstrap/`: optional host bootstrap helper.
 - `scripts/ops/`: import/update/verification workflows.
 - `tests/smoke/`: API and replication smoke checks.
 
@@ -30,6 +29,14 @@ This repository contains a Docker-first, reproducible setup for running an Overp
 ## Monitoring
 
 Monitoring setup and alert policy are documented in `docs/ops/oneuptime-monitoring.md`.
+
+## Host Provisioning
+
+Default provisioning and host reconciliation are Ansible-first:
+
+```bash
+ansible-playbook -i infra/ansible/inventory/hosts.yml infra/ansible/playbooks/site.yml
+```
 
 ## Quick Start
 

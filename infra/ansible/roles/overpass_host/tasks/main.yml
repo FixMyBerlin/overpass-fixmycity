@@ -1,0 +1,59 @@
+---
+- name: Ensure operations group exists
+  ansible.builtin.group:
+    name: "{{ overpass_ops_group }}"
+    system: true
+    state: present
+
+- name: Ensure service user exists
+  ansible.builtin.user:
+    name: "{{ overpass_service_user }}"
+    group: "{{ overpass_ops_group }}"
+    shell: /usr/sbin/nologin
+    create_home: true
+    system: true
+    state: present
+
+- name: Add operator user to docker group
+  ansible.builtin.user:
+    name: "{{ overpass_operator_user }}"
+    groups: docker
+    append: true
+  when: overpass_operator_user | length > 0
+
+- name: Ensure required host directories exist
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    mode: "{{ item.mode }}"
+  loop:
+    - path: "{{ overpass_data_root }}"
+      owner: "{{ overpass_service_user }}"
+      group: "{{ overpass_ops_group }}"
+      mode: "0750"
+    - path: "{{ overpass_data_root }}/db"
+      owner: "{{ overpass_service_user }}"
+      group: "{{ overpass_ops_group }}"
+      mode: "0750"
+    - path: "{{ overpass_data_root }}/secrets"
+      owner: root
+      group: "{{ overpass_ops_group }}"
+      mode: "0750"
+    - path: "{{ traefik_acme_root }}"
+      owner: root
+      group: root
+      mode: "0750"
+    - path: "{{ overpass_repo_root }}"
+      owner: "{{ overpass_repo_owner }}"
+      group: "{{ overpass_repo_group }}"
+      mode: "0755"
+
+- name: Ensure ACME state file exists with strict permissions
+  ansible.builtin.file:
+    path: "{{ traefik_acme_root }}/acme.json"
+    state: touch
+    owner: root
+    group: root
+    mode: "0600"

@@ -1,0 +1,17 @@
+[Unit]
+Description=Overpass replication lag monitor (OneUptime)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory={{ overpass_repo_root }}
+EnvironmentFile={{ monitoring_env_path }}
+ExecStart=/usr/bin/env bun {{ monitoring_script_relpath }} --status-url ${OVERPASS_STATUS_URL} --max-lag-seconds ${OVERPASS_MAX_LAG_SECONDS} --heartbeat-url ${ONEUPTIME_HEARTBEAT_URL} --heartbeat-fail-url ${ONEUPTIME_HEARTBEAT_FAIL_URL}
+
+# Hardening
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths={{ overpass_repo_root }}

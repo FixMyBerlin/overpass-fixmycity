@@ -1,0 +1,50 @@
+---
+- name: Ensure monitoring env directory exists
+  ansible.builtin.file:
+    path: "{{ monitoring_env_dir }}"
+    state: directory
+    owner: "{{ monitoring_env_owner }}"
+    group: "{{ monitoring_env_group }}"
+    mode: "0750"
+
+- name: Render monitoring environment file
+  ansible.builtin.template:
+    src: monitoring.env.j2
+    dest: "{{ monitoring_env_path }}"
+    owner: "{{ monitoring_env_owner }}"
+    group: "{{ monitoring_env_group }}"
+    mode: "{{ monitoring_env_mode }}"
+  notify: Restart replication monitor timer
+
+- name: Install replication monitor service unit
+  ansible.builtin.template:
+    src: replication-monitor.service.j2
+    dest: "/etc/systemd/system/{{ monitoring_service_name }}"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload systemd
+
+- name: Install replication monitor timer unit
+  ansible.builtin.template:
+    src: replication-monitor.timer.j2
+    dest: "/etc/systemd/system/{{ monitoring_timer_name }}"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload systemd
+
+- name: Flush handlers before enabling timer
+  ansible.builtin.meta: flush_handlers
+
+- name: Ensure replication monitor timer is enabled and running
+  ansible.builtin.systemd:
+    name: "{{ monitoring_timer_name }}"
+    enabled: true
+    state: started
+
+- name: Verify replication monitor timer state
+  ansible.builtin.command: "systemctl is-active {{ monitoring_timer_name }}"
+  register: monitoring_timer_active
+  changed_when: false
+  failed_when: monitoring_timer_active.stdout.strip() != "active"

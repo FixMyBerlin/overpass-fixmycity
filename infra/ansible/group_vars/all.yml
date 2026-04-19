@@ -1,0 +1,47 @@
+# Host baseline
+apt_upgrade_enabled: true
+apt_packages_common:
+  - ca-certificates
+  - curl
+  - gnupg
+hostname_value: ""
+reboot_if_required: false
+
+# Docker baseline
+apt_packages_docker:
+  - docker.io
+  - docker-compose-plugin
+docker_service_name: docker
+
+# Overpass host users and paths
+overpass_ops_group: overpassops
+overpass_service_user: overpasssvc
+overpass_operator_user: ""
+overpass_data_root: /srv/overpass-data
+traefik_acme_root: /srv/traefik
+overpass_repo_root: /opt/overpass-docker-workspace
+overpass_repo_owner: root
+overpass_repo_group: root
+
+# Monitoring deployment
+# Source of truth for deployed monitor behavior.
+# If you update defaults here, keep docs/ops/oneuptime-monitoring.md aligned.
+monitoring_env_dir: /etc/overpass
+monitoring_env_path: /etc/overpass/monitoring.env
+monitoring_env_owner: root
+monitoring_env_group: root
+monitoring_env_mode: "0640"
+
+monitoring_service_name: replication-monitor.service
+monitoring_timer_name: replication-monitor.timer
+monitoring_timer_cadence: 1m
+monitoring_on_boot_delay: 2m
+monitoring_accuracy: 30s
+
+# Sync note: keep hostname here aligned with
+# infra/docker/.env(.example) -> OVERPASS_DOMAIN.
+monitoring_status_url: https://private-overpass.fixmycity.de/api/status
+monitoring_max_lag_seconds: 300
+monitoring_heartbeat_url: ""
+monitoring_heartbeat_fail_url: ""
+monitoring_script_relpath: scripts/ops/monitor_replication.ts

@@ -1,0 +1,9 @@
+---
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Restart replication monitor timer
+  ansible.builtin.systemd:
+    name: "{{ monitoring_timer_name }}"
+    state: restarted

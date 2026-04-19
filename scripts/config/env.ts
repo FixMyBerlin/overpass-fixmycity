@@ -96,27 +96,11 @@ const runtimeTestSchema = z.object({
   OVERPASS_REPLICATION_WAIT_MS: positiveIntString,
 });
 
-const installBunSchema = z.object({
-  HOME: rootRelativePath,
-});
-
-const bootstrapHostSchema = z
-  .object({
-    SUDO_USER: nonEmptyString.refine((value) => value !== "root", {
-      message: "must be the non-root sudo invoker",
-    }),
-  })
-  .transform((value) => {
-    return { invokingUser: value.SUDO_USER };
-  });
-
 export type OpsPathsEnv = z.infer<typeof opsPathsSchema>;
 export type OverpassBaseUrlEnv = z.infer<typeof overpassBaseUrlSchema>;
 export type OverpassPlanetEnv = z.infer<typeof overpassPlanetSchema>;
 export type OauthClientEnv = z.infer<typeof oauthClientSchema>;
 export type RuntimeTestEnv = z.infer<typeof runtimeTestSchema>;
-export type InstallBunEnv = z.infer<typeof installBunSchema>;
-export type BootstrapHostEnv = z.infer<typeof bootstrapHostSchema>;
 
 export function getOpsPathsEnv(): OpsPathsEnv {
   return parseEnv(opsPathsSchema, "ops paths");
@@ -136,12 +120,4 @@ export function getOauthClientEnv(): OauthClientEnv {
 
 export function getRuntimeTestEnv(): RuntimeTestEnv {
   return parseEnv(runtimeTestSchema, "runtime tests");
-}
-
-export function getInstallBunEnv(): InstallBunEnv {
-  return parseEnv(installBunSchema, "bun install");
-}
-
-export function getBootstrapHostEnv(): BootstrapHostEnv {
-  return parseEnv(bootstrapHostSchema, "bootstrap host");
 }
