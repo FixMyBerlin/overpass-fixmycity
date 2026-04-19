@@ -1,0 +1,44 @@
+services:
+  overpass:
+    image: wiktorn/overpass-api:latest
+    container_name: overpass_de
+    restart: unless-stopped
+    environment:
+      OVERPASS_META: ${OVERPASS_META:-no}
+      OVERPASS_MODE: ${OVERPASS_MODE:-init}
+      OVERPASS_STOP_AFTER_INIT: ${OVERPASS_STOP_AFTER_INIT:-false}
+      OVERPASS_DIFF_URL: ${OVERPASS_DIFF_URL:-https://planet.openstreetmap.org/replication/minute/}
+      OVERPASS_ALLOW_DUPLICATE_QUERIES: ${OVERPASS_ALLOW_DUPLICATE_QUERIES:-yes}
+      OVERPASS_PLANET_URL: ${OVERPASS_PLANET_URL:-}
+    volumes:
+      - ${OVERPASS_DATA_ROOT:-./.local/overpass-data}/db:/db
+      - ${OVERPASS_CACHE_ROOT:-./.local/cache}:/cache
+    ports:
+      - "${OVERPASS_BIND_IP:-127.0.0.1}:${OVERPASS_BIND_PORT:-8080}:80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost/api/status || exit 1"]
+      interval: 60s
+      timeout: 10s
+      retries: 5
+      start_period: 300s
+    networks:
+      - overpass_net
+
+  proxy:
+    image: nginx:1.27-alpine
+    container_name: overpass_proxy
+    restart: unless-stopped
+    depends_on:
+      overpass:
+        condition: service_started
+    ports:
+      - "${PROXY_BIND_IP:-127.0.0.1}:${PROXY_BIND_PORT:-8443}:443"
+    volumes:
+      - ../proxy/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ${OVERPASS_DATA_ROOT:-./.local/overpass-data}/tls:/etc/nginx/tls:ro
+    networks:
+      - overpass_net
+
+networks:
+  overpass_net:
+    driver: bridge
