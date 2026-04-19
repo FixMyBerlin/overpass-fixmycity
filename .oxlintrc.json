@@ -1,0 +1,33 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": [
+    "typescript",
+    "unicorn",
+    "oxc",
+    "node"
+  ],
+  "categories": {
+    "correctness": "error"
+  },
+  "ignorePatterns": [
+    ".cursor/**"
+  ],
+  "rules": {},
+  "env": {
+    "builtin": true,
+    "node": true
+  },
+  "globals": {
+    "Bun": "readonly"
+  },
+  "overrides": [
+    {
+      "files": [
+        "tests/**/*.ts"
+      ],
+      "env": {
+        "node": true
+      }
+    }
+  ]
+}

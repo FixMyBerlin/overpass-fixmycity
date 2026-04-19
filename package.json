@@ -13,6 +13,15 @@
     "smoke:offline": "bun tests/smoke/offline_validation.ts",
     "smoke:run": "bun tests/smoke/run_smoke.ts",
     "bootstrap:host": "bun scripts/bootstrap/bootstrap_host.ts",
-    "bootstrap:install-bun": "bun scripts/bootstrap/install_bun.ts"
+    "bootstrap:install-bun": "bun scripts/bootstrap/install_bun.ts",
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt --check .",
+    "lint": "oxlint --deny-warnings --ignore-path .gitignore .",
+    "lint:fix": "oxlint --fix --ignore-path .gitignore .",
+    "check": "bun run format:check && bun run lint"
+  },
+  "devDependencies": {
+    "oxfmt": "^0.45.0",
+    "oxlint": "^1.60.0"
   }
 }
