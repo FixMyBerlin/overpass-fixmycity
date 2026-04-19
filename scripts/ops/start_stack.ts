@@ -14,12 +14,18 @@ if (!process.env.OVERPASS_PLANET_URL) {
   throw new Error("OVERPASS_PLANET_URL is empty. Run scripts/ops/download_extract.ts first.");
 }
 
-mkdirSync(path.join(process.env.OVERPASS_DATA_ROOT ?? path.join(ROOT_DIR, ".local/overpass-data"), "db"), {
-  recursive: true,
-});
-mkdirSync(path.join(process.env.OVERPASS_CACHE_ROOT ?? path.join(ROOT_DIR, ".local/cache"), "extracts"), {
-  recursive: true,
-});
+mkdirSync(
+  path.join(process.env.OVERPASS_DATA_ROOT ?? path.join(ROOT_DIR, ".local/overpass-data"), "db"),
+  {
+    recursive: true,
+  },
+);
+mkdirSync(
+  path.join(process.env.OVERPASS_CACHE_ROOT ?? path.join(ROOT_DIR, ".local/cache"), "extracts"),
+  {
+    recursive: true,
+  },
+);
 const traefikRoot = process.env.TRAEFIK_ACME_ROOT ?? path.join(ROOT_DIR, ".local/traefik");
 mkdirSync(traefikRoot, { recursive: true });
 const acmeFile = path.join(traefikRoot, "acme.json");

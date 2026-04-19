@@ -17,7 +17,8 @@ if (!existsSync(queryFile)) {
 }
 
 const query = readFileSync(queryFile, "utf8").replace(/\r?\n/g, " ");
-const payloadRaw = await $`curl -sS --get --data-urlencode ${`data=${query}`} ${overpassUrl}`.text();
+const payloadRaw =
+  await $`curl -sS --get --data-urlencode ${`data=${query}`} ${overpassUrl}`.text();
 const payload = JSON.parse(payloadRaw) as { elements?: unknown[] };
 const elements = payload.elements ?? [];
 

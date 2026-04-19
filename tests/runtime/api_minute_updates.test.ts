@@ -13,7 +13,8 @@ type InterpreterResponse = {
 };
 
 async function runInterpreterQuery(): Promise<InterpreterResponse> {
-  const payload = await $`docker exec ${containerName} wget -q -O - --post-data=${`data=${query}`} http://localhost/api/interpreter`.text();
+  const payload =
+    await $`docker exec ${containerName} wget -q -O - --post-data=${`data=${query}`} http://localhost/api/interpreter`.text();
   return JSON.parse(payload) as InterpreterResponse;
 }
 
@@ -28,15 +29,15 @@ test(
   "replication timestamp does not move backwards over one minute",
   { timeout: waitMs + 30_000 },
   async () => {
-  const before = await runInterpreterQuery();
-  await Bun.sleep(waitMs);
-  const after = await runInterpreterQuery();
+    const before = await runInterpreterQuery();
+    await Bun.sleep(waitMs);
+    const after = await runInterpreterQuery();
 
-  const timestampBefore = before.osm3s?.timestamp_osm_base ?? "";
-  const timestampAfter = after.osm3s?.timestamp_osm_base ?? "";
+    const timestampBefore = before.osm3s?.timestamp_osm_base ?? "";
+    const timestampAfter = after.osm3s?.timestamp_osm_base ?? "";
 
-  expect(timestampBefore.length).toBeGreaterThan(0);
-  expect(timestampAfter.length).toBeGreaterThan(0);
-  expect(timestampAfter >= timestampBefore).toBe(true);
+    expect(timestampBefore.length).toBeGreaterThan(0);
+    expect(timestampAfter.length).toBeGreaterThan(0);
+    expect(timestampAfter >= timestampBefore).toBe(true);
   },
 );
