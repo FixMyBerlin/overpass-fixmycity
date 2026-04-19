@@ -67,8 +67,8 @@ bun --env-file=infra/docker/.env scripts/ops/check_replication.ts
 For Traefik-only deployments, set an explicit base URL:
 
 ```bash
-OVERPASS_BASE_URL="https://overpass.fixmycity.de" bun --env-file=infra/docker/.env tests/smoke/run_smoke.ts
-OVERPASS_BASE_URL="https://overpass.fixmycity.de" bun --env-file=infra/docker/.env scripts/ops/check_update_lag.ts
+OVERPASS_BASE_URL="https://private-overpass.fixmycity.de" bun --env-file=infra/docker/.env tests/smoke/run_smoke.ts
+OVERPASS_BASE_URL="https://private-overpass.fixmycity.de" bun --env-file=infra/docker/.env scripts/ops/check_update_lag.ts
 ```
 
 ## 5) Stop Stack

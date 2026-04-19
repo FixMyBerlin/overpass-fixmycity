@@ -91,7 +91,7 @@ Then run the chosen test command.
 For explicit Traefik URL testing:
 
 ```bash
-OVERPASS_BASE_URL="https://overpass.fixmycity.de" bun --env-file=infra/docker/.env tests/smoke/run_smoke.ts
+OVERPASS_BASE_URL="https://private-overpass.fixmycity.de" bun --env-file=infra/docker/.env tests/smoke/run_smoke.ts
 ```
 
 ## Failure triage
