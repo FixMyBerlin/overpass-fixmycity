@@ -8,9 +8,12 @@ hostname_value: ""
 reboot_if_required: false
 
 # Docker baseline
-apt_packages_docker:
+apt_packages_docker_base:
   - docker.io
-  - docker-compose-plugin
+# Baseline host distro: Ubuntu 24.04 (noble) uses docker-compose-plugin.
+# Reminder: older distro releases may require a different package name
+# (e.g. docker-compose-v2) or Docker's upstream apt repository.
+docker_compose_plugin_package: docker-compose-plugin
 docker_service_name: docker
 
 # Overpass host users and paths
