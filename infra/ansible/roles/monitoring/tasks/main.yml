@@ -42,9 +42,11 @@
     name: "{{ monitoring_timer_name }}"
     enabled: true
     state: started
+  when: not ansible_check_mode
 
 - name: Verify replication monitor timer state
   ansible.builtin.command: "systemctl is-active {{ monitoring_timer_name }}"
   register: monitoring_timer_active
   changed_when: false
   failed_when: monitoring_timer_active.stdout.strip() != "active"
+  when: not ansible_check_mode

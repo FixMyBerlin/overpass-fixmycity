@@ -53,7 +53,7 @@
 - name: Ensure ACME state file exists with strict permissions
   ansible.builtin.file:
     path: "{{ traefik_acme_root }}/acme.json"
-    state: touch
+    state: file
     owner: root
     group: root
     mode: "0600"

@@ -7,3 +7,4 @@
   ansible.builtin.systemd:
     name: "{{ monitoring_timer_name }}"
     state: restarted
+  when: not ansible_check_mode

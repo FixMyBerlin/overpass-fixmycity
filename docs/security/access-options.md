@@ -9,14 +9,14 @@
 
 ## Option Comparison
 
-| Option                               | Security Strength | Ops Complexity | App Compatibility | Maintenance | Notes                                                               |
-| ------------------------------------ | ----------------- | -------------- | ----------------- | ----------- | ------------------------------------------------------------------- |
-| Publicly accessible endpoint + basic hardening | Medium  | Low            | High              | Low         | Public reachability with TLS, timeouts, monitoring, and rate-limit. |
-| Traefik IP allowlist middleware      | Medium            | Low            | Medium            | Low         | Optional tighter perimeter for specific partner/internal use cases.  |
-| Private network/VPN                  | High              | Medium         | Medium            | Medium      | Strong boundary; requires network client setup.                     |
-| mTLS between client and gateway      | High              | Medium-High    | Medium            | Medium-High | Strong identity, cert lifecycle overhead.                           |
-| Token gateway in front of Overpass   | Medium-High       | High           | High              | High        | Flexible for app auth, adds custom service complexity.              |
-| Cloud security groups/private LB     | High              | Medium         | Medium-High       | Medium      | Effective in cloud-native restricted deployments.                   |
+| Option                                         | Security Strength | Ops Complexity | App Compatibility | Maintenance | Notes                                                               |
+| ---------------------------------------------- | ----------------- | -------------- | ----------------- | ----------- | ------------------------------------------------------------------- |
+| Publicly accessible endpoint + basic hardening | Medium            | Low            | High              | Low         | Public reachability with TLS, timeouts, monitoring, and rate-limit. |
+| Traefik IP allowlist middleware                | Medium            | Low            | Medium            | Low         | Optional tighter perimeter for specific partner/internal use cases. |
+| Private network/VPN                            | High              | Medium         | Medium            | Medium      | Strong boundary; requires network client setup.                     |
+| mTLS between client and gateway                | High              | Medium-High    | Medium            | Medium-High | Strong identity, cert lifecycle overhead.                           |
+| Token gateway in front of Overpass             | Medium-High       | High           | High              | High        | Flexible for app auth, adds custom service complexity.              |
+| Cloud security groups/private LB               | High              | Medium         | Medium-High       | Medium      | Effective in cloud-native restricted deployments.                   |
 
 ## Recommended Default
 
