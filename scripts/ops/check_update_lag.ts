@@ -1,15 +1,15 @@
 #!/usr/bin/env bun
 
 import { $ } from "bun";
-import { getOverpassBaseUrlEnv } from "../config/env";
+import { getOverpassTestEnv } from "../config/env";
 import { requireCommand } from "./lib";
 
 $.throws(true);
 
 requireCommand("curl");
 
-const { OVERPASS_BASE_URL } = getOverpassBaseUrlEnv();
-const statusUrl = `${OVERPASS_BASE_URL}/api/status`;
+const { OVERPASS_TEST_BASE_URL } = getOverpassTestEnv();
+const statusUrl = `${OVERPASS_TEST_BASE_URL}/api/status`;
 const raw = await $`curl -sS ${statusUrl}`.text();
 
 const match = raw.match(/(?:timestamp_osm_base=|osm_base=")([0-9T:\-Z]+)(?:"|$)/);

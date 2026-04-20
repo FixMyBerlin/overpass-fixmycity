@@ -1,11 +1,11 @@
 #!/usr/bin/env bun
 
 import { test, expect } from "bun:test";
-import { getRuntimeTestEnv } from "../../scripts/config/env";
+import { getOverpassTestEnv } from "../../scripts/config/env";
 
-const { OVERPASS_CONTAINER_NAME, OVERPASS_REPLICATION_WAIT_MS } = getRuntimeTestEnv();
-const containerName = OVERPASS_CONTAINER_NAME;
-const waitMs = OVERPASS_REPLICATION_WAIT_MS;
+const OVERPASS_CONTAINER_NAME = "overpass_de";
+const { OVERPASS_TEST_REPLICATION_WAIT_MS } = getOverpassTestEnv();
+const waitMs = OVERPASS_TEST_REPLICATION_WAIT_MS;
 const query = "[out:json];node(1);out;";
 const { $ } = Bun;
 
@@ -16,7 +16,7 @@ type InterpreterResponse = {
 
 async function runInterpreterQuery(): Promise<InterpreterResponse> {
   const payload =
-    await $`docker exec ${containerName} wget -q -O - --post-data=${`data=${query}`} http://localhost/api/interpreter`.text();
+    await $`docker exec ${OVERPASS_CONTAINER_NAME} wget -q -O - --post-data=${`data=${query}`} http://localhost/api/interpreter`.text();
   return JSON.parse(payload) as InterpreterResponse;
 }
 

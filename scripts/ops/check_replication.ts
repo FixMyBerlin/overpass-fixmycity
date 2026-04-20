@@ -1,20 +1,20 @@
 #!/usr/bin/env bun
 
 import { $ } from "bun";
-import { getOverpassBaseUrlEnv } from "../config/env";
+import { getOverpassTestEnv } from "../config/env";
 import { log, requireCommand } from "./lib";
 
 $.throws(true);
 
 requireCommand("curl");
 
-const { OVERPASS_BASE_URL } = getOverpassBaseUrlEnv();
-const overpassUrl = `${OVERPASS_BASE_URL}/api/interpreter`;
+const { OVERPASS_TEST_BASE_URL, OVERPASS_TEST_REPLICATION_WAIT_MS } = getOverpassTestEnv();
+const overpassUrl = `${OVERPASS_TEST_BASE_URL}/api/interpreter`;
 const query = "[out:json];node(1);out;";
 
 log(`Checking replication timestamps from ${overpassUrl}`);
 const responseA = await $`curl -sS --get --data-urlencode ${`data=${query}`} ${overpassUrl}`.text();
-await Bun.sleep(65_000);
+await Bun.sleep(OVERPASS_TEST_REPLICATION_WAIT_MS);
 const responseB = await $`curl -sS --get --data-urlencode ${`data=${query}`} ${overpassUrl}`.text();
 
 const a = JSON.parse(responseA) as { osm3s?: { timestamp_osm_base?: string } };

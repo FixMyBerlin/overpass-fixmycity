@@ -91,12 +91,12 @@ Then run the chosen test command.
 For explicit Traefik URL testing:
 
 ```bash
-OVERPASS_BASE_URL="https://private-overpass.fixmycity.de" bun --env-file=infra/docker/.env tests/smoke/run_smoke.ts
+OVERPASS_TEST_BASE_URL="https://private-overpass.fixmycity.de" bun --env-file=infra/docker/.env tests/smoke/run_smoke.ts
 ```
 
 ## Failure triage
 
-- If tests cannot reach interpreter endpoint, verify stack status and `OVERPASS_BASE_URL`.
+- If tests cannot reach interpreter endpoint, verify stack status and `OVERPASS_TEST_BASE_URL`.
 - If replication checks fail, rerun smoke once after waiting for replication to progress.
 - If environment-derived behavior looks wrong, compare `infra/docker/.env` with `infra/docker/.env.example`.
 - For repeated infra/startup failures, defer to recovery and troubleshooting guidance in `docs/ops/runbook.md`.

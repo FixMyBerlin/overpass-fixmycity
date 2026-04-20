@@ -15,35 +15,23 @@ ansible-playbook -i infra/ansible/inventory/hosts.yml infra/ansible/playbooks/si
 cp infra/docker/.env.example infra/docker/.env
 ```
 
-Edit `infra/docker/.env` for host-specific paths and routing settings.
-Minimum required values for Traefik deployments:
+Primary stack defaults (including paths, domain, Traefik, and Overpass runtime knobs) are located in `infra/docker/stack.env.yaml`.
 
-- `OVERPASS_DOMAIN`
-- `TRAEFIK_ACME_EMAIL`
+Set required runtime value in `infra/docker/.env`:
 
-Optional value for restricted deployments:
-
-- `OVERPASS_ALLOWED_CIDRS` (default is public access via `0.0.0.0/0,::/0`)
-
-Required:
-
-- `OVERPASS_BASE_URL` (used by smoke and lag scripts)
-- `OVERPASS_PLANET_URL` (protected Geofabrik source URL)
-- `USE_OAUTH_COOKIE_CLIENT` (set to `yes` for oauth cookie refresh flow)
-- `OVERPASS_OAUTH_USER`
 - `OVERPASS_OAUTH_PASSWORD`
+
+All non-secret defaults are sourced from `infra/docker/stack.env.yaml` and can be overridden by exporting process env vars for one-off runs.
 
 For `OVERPASS_RATE_LIMIT` policy, rationale for the configured value, and tuning guidance, see `docs/security/overpass-resource-policy-evaluation.md`.
 
 ## 2) Configure OAuth Credentials
 
-Set these values in `infra/docker/.env`:
+Set this value in `infra/docker/.env`:
 
-- `OVERPASS_OAUTH_USER`
 - `OVERPASS_OAUTH_PASSWORD`
-- optional overrides: `OVERPASS_OAUTH_OSM_HOST`, `OVERPASS_OAUTH_CONSUMER_URL`
 
-`scripts/ops/start_stack.ts` validates these env vars with Zod and generates `/secrets/oauth-settings.json` automatically at startup.
+`scripts/ops/start_stack.ts` validates config inputs with Zod, then generates `/secrets/oauth-settings.json` automatically at startup.
 
 ## 3) Start Stack
 
@@ -74,11 +62,11 @@ bun --env-file=infra/docker/.env scripts/ops/verify_query.ts
 bun --env-file=infra/docker/.env scripts/ops/check_replication.ts
 ```
 
-For Traefik-only deployments, set an explicit base URL:
+For one-off test target overrides, use `OVERPASS_TEST_BASE_URL`:
 
 ```bash
-OVERPASS_BASE_URL="https://private-overpass.fixmycity.de" bun --env-file=infra/docker/.env tests/smoke/run_smoke.ts
-OVERPASS_BASE_URL="https://private-overpass.fixmycity.de" bun --env-file=infra/docker/.env scripts/ops/check_update_lag.ts
+OVERPASS_TEST_BASE_URL="https://private-overpass.fixmycity.de" bun --env-file=infra/docker/.env tests/smoke/run_smoke.ts
+OVERPASS_TEST_BASE_URL="https://private-overpass.fixmycity.de" bun --env-file=infra/docker/.env scripts/ops/check_update_lag.ts
 ```
 
 ## 5) Stop Stack
@@ -111,6 +99,7 @@ bun --env-file=infra/docker/.env scripts/ops/stop_stack.ts
   docker compose --env-file infra/docker/.env -f infra/docker/docker-compose.yml down
   docker compose --env-file infra/docker/.env -f infra/docker/docker-compose.yml up -d
   ```
+
   Healthcheck policy:
   - Runtime/default (strict startup window): `infra/docker/docker-compose.yml` only (`start_period: 15m`).
 

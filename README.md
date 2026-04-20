@@ -8,7 +8,7 @@ This repository contains a Docker-first, reproducible setup for running an Overp
 - `docs/ops/`: sizing, host prep, runbook.
 - `docs/security/`: hardening notes and access-control evaluation.
 - `infra/ansible/`: host and monitoring automation playbooks/roles.
-- `infra/docker/`: compose stack and environment template.
+- `infra/docker/`: compose stack, YAML stack config, and env template.
 - `scripts/ops/`: import/update/verification workflows.
 - `tests/smoke/`: API and replication smoke checks.
 
@@ -42,6 +42,7 @@ ansible-playbook -i infra/ansible/inventory/hosts.yml infra/ansible/playbooks/si
 
 ```bash
 cp infra/docker/.env.example infra/docker/.env
+# review infra/docker/stack.env.yaml defaults
 # edit infra/docker/.env and set OVERPASS_OAUTH_PASSWORD
 bun --env-file=infra/docker/.env scripts/ops/start_stack.ts
 bun --env-file=infra/docker/.env tests/smoke/run_smoke.ts
