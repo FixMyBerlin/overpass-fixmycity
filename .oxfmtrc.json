@@ -3,5 +3,7 @@
   "ignorePatterns": [".cursor/**"],
   "printWidth": 100,
   "proseWrap": "preserve",
-  "endOfLine": "lf"
+  "endOfLine": "lf",
+  "insertFinalNewline": true,
+  "semi": false
 }
