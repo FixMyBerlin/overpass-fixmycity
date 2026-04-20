@@ -1,18 +1,18 @@
 #!/usr/bin/env bun
 
-import { readFileSync } from "node:fs";
-import path from "node:path";
-import { z } from "zod";
+import { readFileSync } from "node:fs"
+import path from "node:path"
+import { z } from "zod"
 
-const ROOT_DIR = path.resolve(import.meta.dir, "../..");
-const STACK_CONFIG_FILE = path.join(ROOT_DIR, "infra/docker/stack.env.yaml");
+const ROOT_DIR = path.resolve(import.meta.dir, "../..")
+const STACK_CONFIG_FILE = path.join(ROOT_DIR, "infra/docker/stack.env.yaml")
 
-const nonEmptyString = z.string().trim().min(1);
+const nonEmptyString = z.string().trim().min(1)
 const httpUrl = z
   .url()
   .refine((value) => value.startsWith("http://") || value.startsWith("https://"), {
     message: "must be an http(s) URL",
-  });
+  })
 const httpOrFileUrl = z
   .url()
   .refine(
@@ -21,34 +21,34 @@ const httpOrFileUrl = z
     {
       message: "must be an http(s) or file URL",
     },
-  );
+  )
 const positiveIntString = z
   .string()
   .trim()
   .regex(/^\d+$/, "must be a positive integer")
   .transform((value) => Number(value))
-  .refine((value) => Number.isSafeInteger(value) && value > 0, "must be a positive integer");
+  .refine((value) => Number.isSafeInteger(value) && value > 0, "must be a positive integer")
 const rootRelativePath = nonEmptyString.transform((value) =>
   path.isAbsolute(value) ? path.normalize(value) : path.resolve(ROOT_DIR, value),
-);
+)
 
 function parseEnv<T extends z.ZodTypeAny>(
   schema: T,
   scope: string,
   source: Record<string, unknown>,
 ): z.infer<T> {
-  const result = schema.safeParse(source);
+  const result = schema.safeParse(source)
   if (result.success) {
-    return result.data;
+    return result.data
   }
 
   const details = result.error.issues
     .map((issue) => {
-      const key = issue.path.join(".") || "<root>";
-      return `${key}: ${issue.message}`;
+      const key = issue.path.join(".") || "<root>"
+      return `${key}: ${issue.message}`
     })
-    .join("\n");
-  throw new Error(`Invalid environment for ${scope}:\n${details}`);
+    .join("\n")
+  throw new Error(`Invalid environment for ${scope}:\n${details}`)
 }
 
 const stackConfigSchema = z.object({
@@ -81,16 +81,16 @@ const stackConfigSchema = z.object({
   TRAEFIK_DIAL_TIMEOUT: nonEmptyString,
   OVERPASS_TEST_BASE_URL: httpUrl.transform((value) => value.replace(/\/+$/, "")),
   OVERPASS_TEST_REPLICATION_WAIT_MS: nonEmptyString,
-});
+})
 
 const opsPathsSchema = z.object({
   OVERPASS_DATA_ROOT: rootRelativePath,
   TRAEFIK_ACME_ROOT: rootRelativePath,
-});
+})
 
 const overpassPlanetSchema = z.object({
   OVERPASS_PLANET_URL: httpOrFileUrl,
-});
+})
 
 const oauthClientSchema = z
   .object({
@@ -104,7 +104,7 @@ const oauthClientSchema = z
   })
   .superRefine((value, ctx) => {
     if (value.USE_OAUTH_COOKIE_CLIENT !== "yes") {
-      return;
+      return
     }
 
     if (!value.OVERPASS_OAUTH_USER) {
@@ -112,7 +112,7 @@ const oauthClientSchema = z
         code: z.ZodIssueCode.custom,
         path: ["OVERPASS_OAUTH_USER"],
         message: "is required when USE_OAUTH_COOKIE_CLIENT=yes",
-      });
+      })
     }
 
     if (!value.OVERPASS_OAUTH_PASSWORD) {
@@ -120,15 +120,15 @@ const oauthClientSchema = z
         code: z.ZodIssueCode.custom,
         path: ["OVERPASS_OAUTH_PASSWORD"],
         message: "is required when USE_OAUTH_COOKIE_CLIENT=yes",
-      });
-      return;
+      })
+      return
     }
-  });
+  })
 
 const overpassTestSchema = z.object({
   OVERPASS_TEST_BASE_URL: httpUrl.transform((value) => value.replace(/\/+$/, "")),
   OVERPASS_TEST_REPLICATION_WAIT_MS: positiveIntString,
-});
+})
 
 const composeEnvSchema = z.object({
   OVERPASS_DATA_ROOT: rootRelativePath,
@@ -155,39 +155,39 @@ const composeEnvSchema = z.object({
   TRAEFIK_READ_TIMEOUT: nonEmptyString,
   TRAEFIK_WRITE_TIMEOUT: nonEmptyString,
   TRAEFIK_DIAL_TIMEOUT: nonEmptyString,
-});
+})
 
-export type OpsPathsEnv = z.infer<typeof opsPathsSchema>;
-export type OverpassPlanetEnv = z.infer<typeof overpassPlanetSchema>;
-export type OauthClientEnv = z.infer<typeof oauthClientSchema>;
-export type OverpassTestEnv = z.infer<typeof overpassTestSchema>;
-export type ComposeEnv = z.infer<typeof composeEnvSchema>;
-export type StackConfig = z.infer<typeof stackConfigSchema>;
+export type OpsPathsEnv = z.infer<typeof opsPathsSchema>
+export type OverpassPlanetEnv = z.infer<typeof overpassPlanetSchema>
+export type OauthClientEnv = z.infer<typeof oauthClientSchema>
+export type OverpassTestEnv = z.infer<typeof overpassTestSchema>
+export type ComposeEnv = z.infer<typeof composeEnvSchema>
+export type StackConfig = z.infer<typeof stackConfigSchema>
 
-let cachedStackConfig: StackConfig | null = null;
+let cachedStackConfig: StackConfig | null = null
 
 function getStackConfig(): StackConfig {
   if (cachedStackConfig) {
-    return cachedStackConfig;
+    return cachedStackConfig
   }
-  const rawConfig = readFileSync(STACK_CONFIG_FILE, "utf8");
-  const parsedConfig = Bun.YAML.parse(rawConfig);
-  const result = stackConfigSchema.safeParse(parsedConfig);
+  const rawConfig = readFileSync(STACK_CONFIG_FILE, "utf8")
+  const parsedConfig = Bun.YAML.parse(rawConfig)
+  const result = stackConfigSchema.safeParse(parsedConfig)
   if (!result.success) {
     const details = result.error.issues
       .map((issue) => {
-        const key = issue.path.join(".") || "<root>";
-        return `${key}: ${issue.message}`;
+        const key = issue.path.join(".") || "<root>"
+        return `${key}: ${issue.message}`
       })
-      .join("\n");
-    throw new Error(`Invalid stack config (${STACK_CONFIG_FILE}):\n${details}`);
+      .join("\n")
+    throw new Error(`Invalid stack config (${STACK_CONFIG_FILE}):\n${details}`)
   }
-  cachedStackConfig = result.data;
-  return cachedStackConfig;
+  cachedStackConfig = result.data
+  return cachedStackConfig
 }
 
 function getStackDefaultsEnv(): Record<string, string> {
-  const stackConfig = getStackConfig();
+  const stackConfig = getStackConfig()
   return {
     OVERPASS_DATA_ROOT: stackConfig.OVERPASS_DATA_ROOT,
     TRAEFIK_ACME_ROOT: stackConfig.TRAEFIK_ACME_ROOT,
@@ -218,39 +218,39 @@ function getStackDefaultsEnv(): Record<string, string> {
     TRAEFIK_DIAL_TIMEOUT: stackConfig.TRAEFIK_DIAL_TIMEOUT,
     OVERPASS_TEST_BASE_URL: stackConfig.OVERPASS_TEST_BASE_URL,
     OVERPASS_TEST_REPLICATION_WAIT_MS: stackConfig.OVERPASS_TEST_REPLICATION_WAIT_MS,
-  };
+  }
 }
 
 function getResolvedEnv(): Record<string, unknown> {
   return {
     ...getStackDefaultsEnv(),
     ...process.env,
-  };
+  }
 }
 
 export function getOpsPathsEnv(): OpsPathsEnv {
-  return parseEnv(opsPathsSchema, "ops paths", getResolvedEnv());
+  return parseEnv(opsPathsSchema, "ops paths", getResolvedEnv())
 }
 
 export function getOverpassPlanetEnv(): OverpassPlanetEnv {
-  const { OVERPASS_PLANET_URL } = getResolvedEnv();
-  return parseEnv(overpassPlanetSchema, "overpass planet URL", { OVERPASS_PLANET_URL });
+  const { OVERPASS_PLANET_URL } = getResolvedEnv()
+  return parseEnv(overpassPlanetSchema, "overpass planet URL", { OVERPASS_PLANET_URL })
 }
 
 export function getOauthClientEnv(): OauthClientEnv {
-  return parseEnv(oauthClientSchema, "oauth client", getResolvedEnv());
+  return parseEnv(oauthClientSchema, "oauth client", getResolvedEnv())
 }
 
 export function getOverpassTestEnv(): OverpassTestEnv {
-  return parseEnv(overpassTestSchema, "overpass tests", getResolvedEnv());
+  return parseEnv(overpassTestSchema, "overpass tests", getResolvedEnv())
 }
 
 export function getComposeEnv(): ComposeEnv {
-  return parseEnv(composeEnvSchema, "docker compose", getResolvedEnv());
+  return parseEnv(composeEnvSchema, "docker compose", getResolvedEnv())
 }
 
 export function applyComposeEnvToProcessEnv(): ComposeEnv {
-  const composeEnv = getComposeEnv();
-  Object.assign(process.env, composeEnv);
-  return composeEnv;
+  const composeEnv = getComposeEnv()
+  Object.assign(process.env, composeEnv)
+  return composeEnv
 }
