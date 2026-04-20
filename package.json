@@ -4,16 +4,20 @@
   "type": "module",
   "scripts": {
     "test": "bun --env-file=infra/docker/.env test",
+    "typecheck": "tsgo --noEmit",
     "format": "oxfmt --write .",
     "format:check": "oxfmt --check .",
     "lint": "oxlint --deny-warnings --ignore-path .gitignore .",
     "lint:fix": "oxlint --fix --ignore-path .gitignore .",
-    "check": "bun run format:check && bun run lint"
+    "check": "bun run typecheck && bun run format:check && bun run lint"
   },
   "dependencies": {
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@types/bun": "^1.3.12",
+    "@types/node": "^25.6.0",
+    "@typescript/native-preview": "^7.0.0-dev.20260419.1",
     "oxfmt": "^0.45.0",
     "oxlint": "^1.60.0"
   }

@@ -29,7 +29,6 @@ test("interpreter endpoint returns JSON with replication timestamp", async () =>
 
 test(
   "replication timestamp does not move backwards over one minute",
-  { timeout: waitMs + 30_000 },
   async () => {
     const before = await runInterpreterQuery();
     await Bun.sleep(waitMs);
@@ -42,4 +41,5 @@ test(
     expect(timestampAfter.length).toBeGreaterThan(0);
     expect(timestampAfter >= timestampBefore).toBe(true);
   },
+  waitMs + 30_000,
 );
