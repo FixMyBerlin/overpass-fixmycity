@@ -14,7 +14,7 @@ Monitoring is designed to answer:
 
 Use `infra/ansible/group_vars/all.yml` as the authoritative source for deployment values:
 
-- `monitoring_status_url`
+- `monitoring_interpreter_url`
 - `monitoring_max_lag_seconds`
 - `monitoring_timer_cadence`
 - `monitoring_on_boot_delay`
@@ -27,7 +27,7 @@ Systemd files are rendered from Ansible templates and should not be edited direc
 ## Current Signals (Baseline)
 
 - **Container health endpoint:** `overpass` is probed via `/api/status` in `infra/docker/docker-compose.yml`.
-- **Replication lag signal:** `scripts/ops/check_update_lag.ts` extracts `timestamp_osm_base` and computes `lag_seconds`.
+- **Replication lag signal:** `scripts/ops/monitor_replication.ts` extracts `timestamp_osm_base` from `/api/interpreter` and computes `lag_seconds`.
 - **Replication monotonicity signal:** `scripts/ops/check_replication.ts` confirms timestamps do not move backwards.
 
 ## Signal Ownership (Simple)
@@ -69,7 +69,7 @@ Systemd files are rendered from Ansible templates and should not be edited direc
 1. In OneUptime, create the two HTTP monitors and one SSL monitor above.
 2. In OneUptime, create a Heartbeat monitor and copy heartbeat URL(s).
 3. Set monitoring variables in `infra/ansible/group_vars/all.yml`:
-   - `monitoring_status_url`
+   - `monitoring_interpreter_url`
    - `monitoring_max_lag_seconds`
    - `monitoring_heartbeat_url`
    - `monitoring_heartbeat_fail_url`
@@ -86,7 +86,7 @@ This renders `/etc/overpass/monitoring.env`, installs `replication-monitor.servi
 Run manually:
 
 ```bash
-bun scripts/ops/monitor_replication.ts --status-url https://<public-overpass-host>/api/status --max-lag-seconds 300 --heartbeat-url https://monitoring.fixmycity.de/heartbeat/<success-token>
+bun scripts/ops/monitor_replication.ts --interpreter-url https://<public-overpass-host>/api/interpreter --max-lag-seconds 300 --heartbeat-url https://monitoring.fixmycity.de/heartbeat/<success-token>
 ```
 
 Ansible-managed assets:
@@ -132,4 +132,4 @@ Route all incidents to the shared ops alert channel plus on-call escalation.
 ## Quick Triage
 
 - **HTTP/TLS alert:** check OneUptime monitor timeline -> check `docker compose ps` and reverse proxy logs.
-- **Replication lag alert:** run `bun scripts/ops/check_update_lag.ts` and `bun scripts/ops/check_replication.ts` locally, then inspect Overpass updater logs.
+- **Replication lag alert:** run `bun scripts/ops/monitor_replication.ts --interpreter-url https://<public-overpass-host>/api/interpreter --max-lag-seconds 300` and `bun scripts/ops/check_replication.ts` locally, then inspect Overpass updater logs.

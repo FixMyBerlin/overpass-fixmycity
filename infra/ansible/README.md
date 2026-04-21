@@ -16,7 +16,7 @@ This directory is the default way to provision and reconcile Overpass hosts.
 2. Update `group_vars/all.yml`:
    - `overpass_operator_user`
    - `hostname_value` (optional)
-   - `monitoring_status_url`
+   - `monitoring_interpreter_url`
    - `monitoring_heartbeat_url`
    - `monitoring_heartbeat_fail_url`
 3. Ensure repository code is present on host at `overpass_repo_root` (default `/opt/overpass-docker-workspace`), or override that variable.
@@ -50,6 +50,36 @@ Dry-run:
 ```bash
 ansible-playbook -i infra/ansible/inventory/hosts.yml infra/ansible/playbooks/site.yml --check
 ```
+
+Clean local validation (isolated, no host pollution):
+
+```bash
+docker rm -f ansible-target-clean >/dev/null 2>&1 || true
+docker run -d --name ansible-target-clean --privileged --cgroupns=host \
+  --tmpfs /run --tmpfs /run/lock \
+  -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
+  geerlingguy/docker-ubuntu2404-ansible:latest /lib/systemd/systemd
+docker exec ansible-target-clean sh -lc 'apt-get update >/dev/null'
+cat > /tmp/overpass-local-inventory-clean.yml <<'EOF'
+all:
+  children:
+    overpass_hosts:
+      hosts:
+        ansible-target-clean:
+          ansible_connection: docker
+EOF
+ansible-playbook -i /tmp/overpass-local-inventory-clean.yml playbooks/site.yml --syntax-check
+ansible-playbook -i /tmp/overpass-local-inventory-clean.yml playbooks/site.yml --check -e @group_vars/all.yml
+ansible-playbook -i /tmp/overpass-local-inventory-clean.yml playbooks/site.yml -e @group_vars/all.yml
+ansible-playbook -i /tmp/overpass-local-inventory-clean.yml playbooks/site.yml -e @group_vars/all.yml
+```
+
+Expected result:
+
+- `--syntax-check` succeeds.
+- `--check` succeeds.
+- first apply configures packages/services/paths.
+- second apply is idempotent (`changed=0`).
 
 Host verification after apply:
 

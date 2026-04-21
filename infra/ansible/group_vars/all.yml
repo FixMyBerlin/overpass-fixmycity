@@ -10,10 +10,9 @@ reboot_if_required: false
 # Docker baseline
 apt_packages_docker_base:
   - docker.io
-# Baseline host distro: Ubuntu 24.04 (noble) uses docker-compose-plugin.
-# Reminder: older distro releases may require a different package name
-# (e.g. docker-compose-v2) or Docker's upstream apt repository.
-docker_compose_plugin_package: docker-compose-plugin
+docker_compose_plugin_candidates:
+  - docker-compose-plugin
+  - docker-compose-v2
 docker_service_name: docker
 
 # Overpass host users and paths
@@ -43,7 +42,7 @@ monitoring_accuracy: 30s
 
 # Sync note: keep hostname here aligned with
 # infra/docker/.env(.example) -> OVERPASS_DOMAIN.
-monitoring_status_url: https://private-overpass.fixmycity.de/api/status
+monitoring_interpreter_url: https://private-overpass.fixmycity.de/api/interpreter
 monitoring_max_lag_seconds: 300
 monitoring_heartbeat_url: ""
 monitoring_heartbeat_fail_url: ""

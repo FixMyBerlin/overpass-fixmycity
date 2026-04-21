@@ -41,6 +41,7 @@ For validation and dry-run commands, use `infra/ansible/README.md`.
 ## External Impact Policy
 
 - Baseline import download is **one-time** per persistent `/db`.
+- Runtime operations should use `scripts/ops/start_stack.ts` and `scripts/ops/stop_stack.ts` as the default start/stop interface.
 - Avoid deleting `/db` (or running `docker compose down -v`) for normal local iteration.
 - Prefer local DB snapshots/volume restore for iterative testing.
 - Avoid aggressive retry loops and keep bounded backoff in update tooling.

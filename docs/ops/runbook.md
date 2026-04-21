@@ -3,6 +3,12 @@
 Monitoring configuration and incident policy are maintained in `docs/ops/oneuptime-monitoring.md`.
 Host baseline and monitoring reconciliation are managed with Ansible in `infra/ansible/`.
 
+Core runtime rule for this repository:
+
+- Always start the stack with `scripts/ops/start_stack.ts`.
+- Always stop the stack with `scripts/ops/stop_stack.ts`.
+- Treat direct `docker compose up/down` as exceptional maintenance/debug operations, not standard workflow.
+
 Re-apply host + monitoring state:
 
 ```bash
@@ -51,7 +57,7 @@ Image/runtime note:
 
 ```bash
 bun --env-file=infra/docker/.env tests/smoke/run_smoke.ts
-bun --env-file=infra/docker/.env scripts/ops/check_update_lag.ts
+bun scripts/ops/monitor_replication.ts --interpreter-url https://private-overpass.fixmycity.de/api/interpreter --max-lag-seconds 999999
 ```
 
 Manual checks (useful when isolating a failing smoke step):
@@ -66,7 +72,7 @@ For one-off test target overrides, use `OVERPASS_TEST_BASE_URL`:
 
 ```bash
 OVERPASS_TEST_BASE_URL="https://private-overpass.fixmycity.de" bun --env-file=infra/docker/.env tests/smoke/run_smoke.ts
-OVERPASS_TEST_BASE_URL="https://private-overpass.fixmycity.de" bun --env-file=infra/docker/.env scripts/ops/check_update_lag.ts
+bun scripts/ops/monitor_replication.ts --interpreter-url "https://private-overpass.fixmycity.de/api/interpreter" --max-lag-seconds 999999
 ```
 
 ## 5) Stop Stack
@@ -81,6 +87,8 @@ bun --env-file=infra/docker/.env scripts/ops/stop_stack.ts
 - Prefer restoring a local snapshot over re-downloading large upstream artifacts.
 - For local testing, avoid `docker compose down -v` unless a full re-initialization is explicitly required.
 - If ACME fails, confirm DNS points to this host and ports `80/443` are reachable before retrying.
+- `scripts/ops/start_stack.ts` automatically removes stale Overpass dispatcher lock files (`osm3s_areas`, `osm3s_osm_base`) when the container is not running, and logs exactly what it removed.
+- Reminder: use `start_stack.ts` for startup so stale lock auto-cleanup and startup validations always run.
 
 ## Local testing: re-download decision matrix
 
@@ -93,24 +101,24 @@ bun --env-file=infra/docker/.env scripts/ops/stop_stack.ts
   ```
 
 - **No re-download (recreate containers after compose/env edits)**  
-  Bring stack down/up without volume deletion:
+  Use script-managed restart without volume deletion:
 
   ```bash
-  docker compose --env-file infra/docker/.env -f infra/docker/docker-compose.yml down
-  docker compose --env-file infra/docker/.env -f infra/docker/docker-compose.yml up -d
+  bun --env-file=infra/docker/.env scripts/ops/stop_stack.ts
+  bun --env-file=infra/docker/.env scripts/ops/start_stack.ts
   ```
 
   Healthcheck policy:
   - Runtime/default (strict startup window): `infra/docker/docker-compose.yml` only (`start_period: 15m`).
 
 - **Re-download required (intentional full rebuild only)**  
-  Delete volumes/data and re-run bootstrap:
+  Delete volumes/data and re-run bootstrap (exceptional maintenance path):
   ```bash
   docker compose --env-file infra/docker/.env -f infra/docker/docker-compose.yml down -v
   bun --env-file=infra/docker/.env scripts/ops/start_stack.ts
   ```
   Use this when you intentionally want a clean DB bootstrap (for example after changing baseline source URL or when DB state is irrecoverable).
-  For direct compose startup during bootstrap-heavy imports, include the bootstrap override with long grace:
+  If bootstrap-heavy imports require the bootstrap override profile, this is one of the few approved direct-compose exceptions:
   ```bash
   docker compose --env-file infra/docker/.env \
     -f infra/docker/docker-compose.yml \
