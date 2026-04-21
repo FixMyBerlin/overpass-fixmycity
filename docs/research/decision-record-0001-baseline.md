@@ -25,3 +25,13 @@ We choose the following phased baseline:
 - Lower storage and CPU footprint during early rollout.
 - Requires explicit documentation around no-attic limitations and metadata expectations.
 - Requires clear operator controls around volume lifecycle to avoid unnecessary upstream traffic.
+
+## Reliability Gate Evidence
+
+Canary execution on 2026-04-21 validated the Germany minute candidate feed against OSMF minute replication for the available 107-minute window (early operator stop due timebox; target was 120 minutes).
+
+- Candidate feed reachability: 107/107 samples (100%).
+- Sequence advancement: no stall above 10 minutes (worst no-advance span: 1 minute).
+- Lag vs OSMF timestamp: 0 to 68 seconds; no consecutive samples above 300 seconds.
+
+Result: pass for all defined reliability-gate criteria in the observed window.
