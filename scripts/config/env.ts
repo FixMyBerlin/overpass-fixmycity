@@ -5,7 +5,7 @@ import path from "node:path"
 import { z } from "zod"
 
 const ROOT_DIR = path.resolve(import.meta.dir, "../..")
-const STACK_CONFIG_FILE = path.join(ROOT_DIR, "infra/docker/stack.env.yaml")
+const DEFAULT_STACK_CONFIG_FILE = path.join(ROOT_DIR, "infra/docker/stack.env.yaml")
 
 const nonEmptyString = z.string().trim().min(1)
 const httpUrl = z
@@ -167,12 +167,22 @@ export type ComposeEnv = z.infer<typeof composeEnvSchema>
 export type StackConfig = z.infer<typeof stackConfigSchema>
 
 let cachedStackConfig: StackConfig | null = null
+let cachedStackConfigPath: string | null = null
+
+function getStackConfigPath(): string {
+  const overridePath = process.env.OVERPASS_STACK_CONFIG_FILE?.trim() ?? ""
+  if (overridePath.length === 0) {
+    return DEFAULT_STACK_CONFIG_FILE
+  }
+  return path.isAbsolute(overridePath) ? path.normalize(overridePath) : path.resolve(ROOT_DIR, overridePath)
+}
 
 function getStackConfig(): StackConfig {
-  if (cachedStackConfig) {
+  const stackConfigPath = getStackConfigPath()
+  if (cachedStackConfig && cachedStackConfigPath === stackConfigPath) {
     return cachedStackConfig
   }
-  const rawConfig = readFileSync(STACK_CONFIG_FILE, "utf8")
+  const rawConfig = readFileSync(stackConfigPath, "utf8")
   const parsedConfig = Bun.YAML.parse(rawConfig)
   const result = stackConfigSchema.safeParse(parsedConfig)
   if (!result.success) {
@@ -182,9 +192,10 @@ function getStackConfig(): StackConfig {
         return `${key}: ${issue.message}`
       })
       .join("\n")
-    throw new Error(`Invalid stack config (${STACK_CONFIG_FILE}):\n${details}`)
+    throw new Error(`Invalid stack config (${stackConfigPath}):\n${details}`)
   }
   cachedStackConfig = result.data
+  cachedStackConfigPath = stackConfigPath
   return cachedStackConfig
 }
 

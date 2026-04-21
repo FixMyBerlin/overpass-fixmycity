@@ -14,8 +14,10 @@ We choose the following phased baseline:
 
 1. **Primary path**: start from a Germany source and run Overpass without attic while keeping metadata enabled.
 2. **Updater path**: keep replication configuration explicit and observable so minute update behavior can be proven in smoke checks.
-3. **Fallback path**: if extract-based minute updates cannot be made reliable, switch to a full-planet replication strategy and scope usage to Germany in clients.
-4. **External impact policy**: initialize once, then preserve persistent `/db` for iterative testing to avoid repeated upstream bootstrap downloads.
+3. **Feed candidate path**: evaluate `https://download.openstreetmap.fr/replication/europe/germany/minute/` for Germany-target minutely replication (reference implementation: `https://github.com/osm-fr/osm-extract-replication`).
+4. **Fallback path**: if extract-based minute updates cannot be made reliable, switch to a full-planet replication strategy and scope usage to Germany in clients.
+5. **External impact policy**: initialize once, then preserve persistent `/db` for iterative testing to avoid repeated upstream bootstrap downloads.
+6. **Validation profile**: use Berlin-sized datasets for local reliability and smoke validation on constrained machines; keep Germany as runtime target.
 
 ## Consequences
 

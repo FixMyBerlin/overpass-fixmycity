@@ -22,6 +22,7 @@ cp infra/docker/.env.example infra/docker/.env
 ```
 
 Primary stack defaults (including paths, domain, Traefik, and Overpass runtime knobs) are located in `infra/docker/stack.env.yaml`.
+Use `OVERPASS_STACK_CONFIG_FILE` to switch to an alternate stack profile (for example `infra/docker/stack.test.berlin.env.yaml`) without editing the default file.
 
 Set required runtime value in `infra/docker/.env`:
 
@@ -46,6 +47,7 @@ bun --env-file=infra/docker/.env scripts/ops/start_stack.ts
 ```
 
 This script creates `${TRAEFIK_ACME_ROOT}/acme.json` with restrictive permissions if missing.
+If you need additional compose overrides (for example bootstrap/local-test profiles), set `OVERPASS_COMPOSE_EXTRA_FILES` as a comma-separated list before calling `start_stack.ts`.
 
 Image/runtime note:
 
@@ -58,6 +60,7 @@ Image/runtime note:
 ```bash
 bun --env-file=infra/docker/.env tests/smoke/run_smoke.ts
 bun scripts/ops/monitor_replication.ts --interpreter-url https://private-overpass.fixmycity.de/api/interpreter --max-lag-seconds 999999
+bun scripts/ops/check_diff_feed_health.ts
 ```
 
 Manual checks (useful when isolating a failing smoke step):
@@ -73,6 +76,22 @@ For one-off test target overrides, use `OVERPASS_TEST_BASE_URL`:
 ```bash
 OVERPASS_TEST_BASE_URL="https://private-overpass.fixmycity.de" bun --env-file=infra/docker/.env tests/smoke/run_smoke.ts
 bun scripts/ops/monitor_replication.ts --interpreter-url "https://private-overpass.fixmycity.de/api/interpreter" --max-lag-seconds 999999
+bun scripts/ops/check_diff_feed_health.ts --candidate-state-url "https://download.openstreetmap.fr/replication/europe/germany/minute/state.txt"
+```
+
+Berlin initial validation profile (fast local rerun for constrained machines):
+
+```bash
+export OVERPASS_STACK_CONFIG_FILE="infra/docker/stack.test.berlin.env.yaml"
+export OVERPASS_COMPOSE_EXTRA_FILES="infra/docker/docker-compose.bootstrap.yml,infra/docker/docker-compose.localtest.yml"
+
+bun --env-file=infra/docker/.env scripts/ops/start_stack.ts
+OVERPASS_TEST_BASE_URL="http://127.0.0.1:8080" bun --env-file=infra/docker/.env tests/smoke/run_smoke.ts
+bun scripts/ops/monitor_replication.ts --interpreter-url "http://127.0.0.1:8080/api/interpreter" --max-lag-seconds 999999
+bun scripts/ops/check_diff_feed_health.ts
+
+bun --env-file=infra/docker/.env scripts/ops/stop_stack.ts
+unset OVERPASS_STACK_CONFIG_FILE OVERPASS_COMPOSE_EXTRA_FILES
 ```
 
 ## 5) Stop Stack
@@ -89,6 +108,7 @@ bun --env-file=infra/docker/.env scripts/ops/stop_stack.ts
 - If ACME fails, confirm DNS points to this host and ports `80/443` are reachable before retrying.
 - `scripts/ops/start_stack.ts` automatically removes stale Overpass dispatcher lock files (`osm3s_areas`, `osm3s_osm_base`) when the container is not running, and logs exactly what it removed.
 - Reminder: use `start_stack.ts` for startup so stale lock auto-cleanup and startup validations always run.
+- Germany minute feed candidate currently under reliability-gate evaluation: `https://download.openstreetmap.fr/replication/europe/germany/minute/` (see `https://github.com/osm-fr/osm-extract-replication`).
 
 ## Local testing: re-download decision matrix
 

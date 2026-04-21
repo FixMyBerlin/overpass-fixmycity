@@ -24,6 +24,11 @@ Use `infra/ansible/group_vars/all.yml` as the authoritative source for deploymen
 
 Systemd files are rendered from Ansible templates and should not be edited directly on hosts.
 
+Replication feed policy note:
+
+- Germany minute feed candidate under reliability-gate evaluation: `https://download.openstreetmap.fr/replication/europe/germany/minute/`
+- Feed generation software reference: `https://github.com/osm-fr/osm-extract-replication`
+
 ## Current Signals (Baseline)
 
 - **Container health endpoint:** `overpass` is probed via `/api/status` in `infra/docker/docker-compose.yml`.
@@ -119,6 +124,12 @@ After apply, verify on host:
 systemctl status replication-monitor.timer --no-pager
 systemctl list-timers | rg replication-monitor
 systemctl start replication-monitor.service && systemctl status replication-monitor.service --no-pager
+```
+
+Feed reliability gate check:
+
+```bash
+bun scripts/ops/check_diff_feed_health.ts
 ```
 
 ## Alert Policy

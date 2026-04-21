@@ -68,12 +68,25 @@ if (!existsSync(acmeFile)) {
 }
 chmodSync(acmeFile, 0o600)
 
-const composeArgs = [
-  "--env-file",
-  ENV_FILE,
-  "-f",
-  path.join(ROOT_DIR, "infra/docker/docker-compose.yml"),
-]
+function resolveComposeFiles(): string[] {
+  const files = [path.join(ROOT_DIR, "infra/docker/docker-compose.yml")]
+  const rawExtraFiles = process.env.OVERPASS_COMPOSE_EXTRA_FILES?.trim() ?? ""
+  if (rawExtraFiles.length === 0) {
+    return files
+  }
+
+  for (const entry of rawExtraFiles.split(",")) {
+    const candidate = entry.trim()
+    if (candidate.length === 0) {
+      continue
+    }
+    files.push(path.isAbsolute(candidate) ? path.normalize(candidate) : path.resolve(ROOT_DIR, candidate))
+  }
+  return files
+}
+
+const composeFiles = resolveComposeFiles()
+const composeArgs = ["--env-file", ENV_FILE, ...composeFiles.flatMap((file) => ["-f", file])]
 
 type PlanetSourceFormat = "pbf" | "bz2" | "gz" | "unknown"
 
@@ -231,6 +244,7 @@ function verifyOauthSettingsFile(): void {
 }
 
 log("Starting Overpass stack with docker compose.")
+log(`Compose files: ${composeFiles.join(", ")}`)
 await ensureSingleOverpassWriter()
 await cleanupStaleDispatcherLockFiles()
 verifyOauthSettingsFile()

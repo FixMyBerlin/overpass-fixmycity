@@ -5,6 +5,7 @@
 - OSM community thread on Overpass performance and self-hosting pressure.
 - SomeoneElse diary entry on building a private Overpass server in 2026.
 - OSM-fr Ansible Overpass role.
+- osm-fr extract replication service/software (`https://github.com/osm-fr/osm-extract-replication`).
 - OSMF Chef cookbook for official Overpass deployment patterns.
 
 ## Core Findings
