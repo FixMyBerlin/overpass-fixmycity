@@ -50,10 +50,20 @@
       group: "{{ overpass_repo_group }}"
       mode: "0755"
 
-- name: Ensure ACME state file exists with strict permissions
+- name: Ensure ACME state file exists
+  ansible.builtin.copy:
+    dest: "{{ traefik_acme_root }}/acme.json"
+    content: ""
+    force: false
+    mode: "0600"
+    owner: root
+    group: root
+
+- name: Enforce ACME state file permissions
   ansible.builtin.file:
     path: "{{ traefik_acme_root }}/acme.json"
     state: file
     owner: root
     group: root
     mode: "0600"
+  when: not ansible_check_mode

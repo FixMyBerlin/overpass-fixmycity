@@ -4,9 +4,36 @@
     name: "{{ apt_packages_docker_base }}"
     state: present
 
+- name: Detect available Docker Compose plugin package
+  ansible.builtin.command: "apt-cache policy {{ item }}"
+  loop: "{{ docker_compose_plugin_candidates | default([]) }}"
+  register: docker_compose_policy_results
+  changed_when: false
+  check_mode: false
+
+- name: Select Docker Compose plugin package
+  ansible.builtin.set_fact:
+    docker_compose_package: >-
+      {{
+        docker_compose_policy_results.results
+        | selectattr("stdout", "search", "Candidate:")
+        | rejectattr("stdout", "search", "Candidate:\\s+\\(none\\)")
+        | map(attribute="item")
+        | list
+        | first
+        | default("")
+      }}
+
+- name: Ensure Docker Compose plugin package is available
+  ansible.builtin.fail:
+    msg: >-
+      No supported Docker Compose plugin package found. Checked:
+      {{ docker_compose_plugin_candidates | default([]) | join(", ") }}
+  when: docker_compose_package | length == 0
+
 - name: Install Docker Compose plugin package
   ansible.builtin.apt:
-    name: "{{ docker_compose_plugin_package }}"
+    name: "{{ docker_compose_package }}"
     state: present
 
 - name: Ensure Docker service is enabled and running
