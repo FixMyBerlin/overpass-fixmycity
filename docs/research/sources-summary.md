@@ -5,6 +5,8 @@
 - OSM community thread on Overpass performance and self-hosting pressure.
 - SomeoneElse diary entry on building a private Overpass server in 2026.
 - OSM-fr Ansible Overpass role.
+- OSM-fr Ansible deployment adaptation PR for Overpass server rollout (`https://github.com/osm-fr/ansible-scripts/pull/112`).
+  - Source of the link: "Overpass API performance issues - #75 by maelito2000 - Help and support - OpenStreetMap Community Forum" (`https://community.openstreetmap.org/t/overpass-api-performance-issues/140598/75`).
 - osm-fr extract replication service/software (`https://github.com/osm-fr/osm-extract-replication`).
 - OSMF Chef cookbook for official Overpass deployment patterns.
 

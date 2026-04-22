@@ -1,5 +1,5 @@
 {
-  "name": "overpass-docker-workspace",
+  "name": "overpass-fixmycity",
   "private": true,
   "type": "module",
   "scripts": {
