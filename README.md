@@ -65,7 +65,7 @@ First decide your stack profile and data-source/auth setup in [infra/docker/stac
 Use [infra/docker/.env.example](infra/docker/.env.example) only when you need the required secret `OVERPASS_OAUTH_PASSWORD` (for internal Geofabrik OAuth access) or explicit runtime overrides.
 
 ```bash
-bun scripts/ops/start_stack.ts
+bun --env-file=infra/docker/.env scripts/ops/start_stack.ts
 bun tests/smoke/run_smoke.ts
 ```
 

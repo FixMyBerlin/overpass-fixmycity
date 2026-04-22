@@ -58,25 +58,25 @@ Image/runtime note:
 ## 4) Verify Query And Update Signals
 
 ```bash
-bun --env-file=infra/docker/.env tests/smoke/run_smoke.ts
+bun tests/smoke/run_smoke.ts
 bun scripts/ops/monitor_replication.ts --interpreter-url https://private-overpass.fixmycity.de/api/interpreter --max-lag-seconds 999999
-bun scripts/ops/check_diff_feed_health.ts
+bun scripts/ops/check_replication.ts
 ```
 
 Manual checks (useful when isolating a failing smoke step):
 
 ```bash
-bun --env-file=infra/docker/.env tests/smoke/offline_validation.ts
-bun --env-file=infra/docker/.env scripts/ops/verify_query.ts
-bun --env-file=infra/docker/.env scripts/ops/check_replication.ts
+bun tests/smoke/offline_validation.ts
+bun scripts/ops/verify_query.ts
+bun scripts/ops/check_replication.ts
 ```
 
 For one-off test target overrides, use `OVERPASS_TEST_BASE_URL`:
 
 ```bash
-OVERPASS_TEST_BASE_URL="https://private-overpass.fixmycity.de" bun --env-file=infra/docker/.env tests/smoke/run_smoke.ts
+OVERPASS_TEST_BASE_URL="https://private-overpass.fixmycity.de" bun tests/smoke/run_smoke.ts
 bun scripts/ops/monitor_replication.ts --interpreter-url "https://private-overpass.fixmycity.de/api/interpreter" --max-lag-seconds 999999
-bun scripts/ops/check_diff_feed_health.ts --candidate-state-url "https://download.openstreetmap.fr/replication/europe/germany/minute/state.txt"
+bun scripts/ops/check_replication.ts
 ```
 
 Berlin initial validation profile (fast local rerun for constrained machines):
@@ -86,18 +86,18 @@ export OVERPASS_STACK_CONFIG_FILE="infra/docker/stack.test.berlin.env.yaml"
 export OVERPASS_COMPOSE_EXTRA_FILES="infra/docker/docker-compose.bootstrap.yml,infra/docker/docker-compose.localtest.yml"
 
 bun --env-file=infra/docker/.env scripts/ops/start_stack.ts
-OVERPASS_TEST_BASE_URL="http://127.0.0.1:8080" bun --env-file=infra/docker/.env tests/smoke/run_smoke.ts
+OVERPASS_TEST_BASE_URL="http://127.0.0.1:8080" bun tests/smoke/run_smoke.ts
 bun scripts/ops/monitor_replication.ts --interpreter-url "http://127.0.0.1:8080/api/interpreter" --max-lag-seconds 999999
-bun scripts/ops/check_diff_feed_health.ts
+bun scripts/ops/check_replication.ts
 
-bun --env-file=infra/docker/.env scripts/ops/stop_stack.ts
+bun scripts/ops/stop_stack.ts
 unset OVERPASS_STACK_CONFIG_FILE OVERPASS_COMPOSE_EXTRA_FILES
 ```
 
 ## 5) Stop Stack
 
 ```bash
-bun --env-file=infra/docker/.env scripts/ops/stop_stack.ts
+bun scripts/ops/stop_stack.ts
 ```
 
 ## Recovery Notes
@@ -116,7 +116,7 @@ bun --env-file=infra/docker/.env scripts/ops/stop_stack.ts
   Keep `/db` and use normal stop/start:
 
   ```bash
-  bun --env-file=infra/docker/.env scripts/ops/stop_stack.ts
+  bun scripts/ops/stop_stack.ts
   bun --env-file=infra/docker/.env scripts/ops/start_stack.ts
   ```
 
@@ -124,7 +124,7 @@ bun --env-file=infra/docker/.env scripts/ops/stop_stack.ts
   Use script-managed restart without volume deletion:
 
   ```bash
-  bun --env-file=infra/docker/.env scripts/ops/stop_stack.ts
+  bun scripts/ops/stop_stack.ts
   bun --env-file=infra/docker/.env scripts/ops/start_stack.ts
   ```
 

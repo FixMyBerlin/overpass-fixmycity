@@ -126,10 +126,10 @@ systemctl list-timers | rg replication-monitor
 systemctl start replication-monitor.service && systemctl status replication-monitor.service --no-pager
 ```
 
-Feed reliability gate check:
+Replication monotonicity check:
 
 ```bash
-bun scripts/ops/check_diff_feed_health.ts
+bun scripts/ops/check_replication.ts
 ```
 
 ## Alert Policy

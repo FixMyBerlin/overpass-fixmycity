@@ -28,5 +28,3 @@ For script execution, effective values resolve as:
 
 1. defaults from `infra/docker/stack.env.yaml`
 2. overridden by process env (including `bun --env-file=infra/docker/.env`)
-
-When in doubt, treat `scripts/config/env.ts` as the executable source of truth.
