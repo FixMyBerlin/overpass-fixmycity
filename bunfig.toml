@@ -1,3 +1,7 @@
+# Wait 5 days before installing newly published package versions (supply-chain posture).
+[install]
+minimumReleaseAge = 432000
+
 [run]
 # Keep runtime startup simple and predictable.
 shell = "bun"
