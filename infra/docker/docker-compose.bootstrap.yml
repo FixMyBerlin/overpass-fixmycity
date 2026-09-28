@@ -1,4 +1,0 @@
-services:
-  overpass:
-    healthcheck:
-      start_period: 8h
