@@ -1,47 +1,16 @@
-# Host Preparation Guide
+# Host Preparation
 
-## Goal
+Target: a **dedicated** Ubuntu 24.04 host. For running on a shared host (e.g. the TILDA staging server) see the isolation plan in [docs/status.md](../status.md); do not run the full playbook there, because the `common` role upgrades packages and may reboot.
 
-Prepare a Docker host for running the Overpass stack with low operational risk and minimal external-service impact.
+1. DNS: `OVERPASS_DOMAIN` (see `infra/docker/germany.env`) points to the host.
+2. Set the host in `infra/ansible/inventory/hosts.yml` and values in `infra/ansible/group_vars/all.yml` (at least `monitoring_heartbeat_url`).
+3. Run the playbook:
 
-## Default Provisioning Path (Ansible)
+   ```bash
+   ansible-playbook -i infra/ansible/inventory/hosts.yml infra/ansible/playbooks/site.yml
+   ```
 
-Use the in-repo Ansible automation as the default provisioning and reconciliation path.
+   It installs Docker, creates `/srv/overpass/{db,diff,backup,traefik}` (data dirs owned by the container uid 10001) and the `replication-monitor` systemd timer.
+4. Clone this repository to `/opt/overpass-fixmycity` and continue with the [runbook](runbook.md).
 
-1. Configure host and variables:
-   - `infra/ansible/inventory/hosts.yml`
-   - `infra/ansible/group_vars/all.yml`
-2. Run site playbook:
-
-```bash
-ansible-playbook -i infra/ansible/inventory/hosts.yml infra/ansible/playbooks/site.yml
-```
-
-The site playbook applies:
-
-- baseline host package update/install
-- Docker install and service enable/start
-- required users/groups and host paths
-- monitoring env + `replication-monitor` systemd unit/timer deployment
-
-For validation and dry-run commands, use `infra/ansible/README.md`.
-
-## Required Host Setup
-
-1. Install Docker Engine and Compose plugin.
-2. Create a dedicated service user and operations group (optional but recommended).
-3. Reserve persistent directories for:
-   - Overpass DB data (`OVERPASS_DATA_ROOT`)
-   - Traefik ACME storage (`TRAEFIK_ACME_ROOT`, includes `acme.json`)
-4. Set OAuth credentials in environment variables (`OVERPASS_OAUTH_USER`, `OVERPASS_OAUTH_PASSWORD`).
-5. Ensure firewall defaults deny inbound except explicitly allowed endpoints.
-6. Ensure DNS for `OVERPASS_DOMAIN` points to the host before first deployment so ACME issuance succeeds.
-7. Allow inbound TCP `80` and `443` for Traefik entrypoints.
-
-## External Impact Policy
-
-- Baseline import download is **one-time** per persistent `/db`.
-- Runtime operations should use `scripts/ops/start_stack.ts` and `scripts/ops/stop_stack.ts` as the default start/stop interface.
-- Avoid deleting `/db` (or running `docker compose down -v`) for normal local iteration.
-- Prefer local DB snapshots/volume restore for iterative testing.
-- Avoid aggressive retry loops and keep bounded backoff in update tooling.
+Firewall: allow inbound 22, 80, 443 only. The Overpass container binds to `127.0.0.1:8080`; public access goes through Traefik.

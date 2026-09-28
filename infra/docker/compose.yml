@@ -1,0 +1,86 @@
+# Overpass stack based on b1tw153/overpass-api (see docs/research/decision-record-0002-base-image-review.md).
+# Always run with a profile env file, e.g.:
+#   docker compose -f infra/docker/compose.yml --env-file infra/docker/germany.env run --rm import
+#   docker compose -f infra/docker/compose.yml --env-file infra/docker/germany.env up -d
+# Add `--profile traefik` on a dedicated host that should terminate TLS itself.
+
+x-overpass: &overpass
+  image: b1tw153/overpass-api:0.7.62.11-r18
+  platform: linux/amd64
+  cpus: ${OVERPASS_CPUS:?}
+  mem_limit: ${OVERPASS_MEMORY:?}
+  memswap_limit: ${OVERPASS_MEMORY:?}
+  environment:
+    OVERPASS_DIFF_URL: ${OVERPASS_DIFF_URL:?}
+    OVERPASS_META_MODE: ${OVERPASS_META_MODE:?}
+    OVERPASS_AREAS: ${OVERPASS_AREAS:?}
+    OVERPASS_REPLICATE_ID: auto
+    OVERPASS_UPDATE_FREQUENCY: 60
+    OVERPASS_BACKUP_TIME: ${OVERPASS_BACKUP_TIME:-}
+    OVERPASS_MIN_FREE_DISK_PERCENT: ${OVERPASS_MIN_FREE_DISK_PERCENT:-5}
+    NGINX_CLIENT_REQ_RATE: ${NGINX_CLIENT_REQ_RATE:-}
+  volumes:
+    - ${OVERPASS_DATA_ROOT:?}/db:/opt/overpass/db
+    - ${OVERPASS_DATA_ROOT:?}/diff:/opt/overpass/diff
+    - ${OVERPASS_DATA_ROOT:?}/backup:/opt/overpass/backup
+  logging:
+    driver: json-file
+    options:
+      max-size: 20m
+      max-file: "5"
+
+services:
+  # One-shot initial load: download extract, import, set replicate_id from OVERPASS_DIFF_URL.
+  import:
+    <<: *overpass
+    profiles: [import]
+    restart: "no"
+    entrypoint: /opt/overpass/bin/import_osm_data.sh
+    healthcheck:
+      disable: true
+    command:
+      - --data-source=${OVERPASS_IMPORT_URL:?}
+      - --diff-url=${OVERPASS_DIFF_URL:?}
+      - --meta=${OVERPASS_META_MODE:?}
+
+  overpass:
+    <<: *overpass
+    restart: unless-stopped
+    ports:
+      # Loopback only: used by smoke tests, the replication monitor and host-level reverse proxies.
+      - "127.0.0.1:${OVERPASS_LOCAL_PORT:-8080}:8080"
+    labels:
+      traefik.enable: true
+      traefik.http.routers.overpass.rule: Host(`${OVERPASS_DOMAIN:-}`)
+      traefik.http.routers.overpass.entrypoints: websecure
+      traefik.http.routers.overpass.tls.certresolver: letsencrypt
+      traefik.http.services.overpass.loadbalancer.server.port: 8080
+
+  traefik:
+    image: traefik:v3.7
+    profiles: [traefik]
+    restart: unless-stopped
+    command:
+      - --log.level=WARN
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.web.http.redirections.entryPoint.to=websecure
+      - --entrypoints.websecure.transport.respondingTimeouts.readTimeout=300s
+      - --entrypoints.websecure.transport.respondingTimeouts.writeTimeout=300s
+      - --serversTransport.forwardingTimeouts.responseHeaderTimeout=300s
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
+      - --certificatesresolvers.letsencrypt.acme.email=${TRAEFIK_ACME_EMAIL:-}
+      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ${OVERPASS_DATA_ROOT:?}/traefik:/letsencrypt
+    logging:
+      driver: json-file
+      options:
+        max-size: 20m
+        max-file: "5"

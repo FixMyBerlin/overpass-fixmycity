@@ -16,14 +16,11 @@ docker_compose_plugin_candidates:
 docker_service_name: docker
 
 # Overpass host users and paths
+# Keep overpass_data_root aligned with OVERPASS_DATA_ROOT in infra/docker/germany.env.
 overpass_ops_group: overpassops
-overpass_service_user: overpasssvc
 overpass_operator_user: ""
-overpass_data_root: /srv/overpass-data
-traefik_acme_root: /srv/traefik
-overpass_repo_root: /opt/overpass-docker-workspace
-overpass_repo_owner: root
-overpass_repo_group: root
+overpass_data_root: /srv/overpass
+overpass_repo_root: /opt/overpass-fixmycity
 
 # Monitoring deployment
 # Source of truth for deployed monitor behavior.
@@ -40,10 +37,6 @@ monitoring_timer_cadence: 1m
 monitoring_on_boot_delay: 2m
 monitoring_accuracy: 30s
 
-# Sync note: keep hostname here aligned with
-# infra/docker/.env(.example) -> OVERPASS_DOMAIN.
-monitoring_interpreter_url: https://private-overpass.fixmycity.de/api/interpreter
+monitoring_overpass_url: http://127.0.0.1:8080
 monitoring_max_lag_seconds: 300
 monitoring_heartbeat_url: ""
-monitoring_heartbeat_fail_url: ""
-monitoring_script_relpath: scripts/ops/monitor_replication.ts

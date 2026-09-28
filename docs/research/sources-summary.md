@@ -1,5 +1,7 @@
 # Overpass Research Summary
 
+> Original research: 2026-04. Revisited 2026-09 — see [landscape review 2026-09](landscape-review-2026-09.md) for new projects (`b1tw153/overpass-api`, `mmd-osm` fork) and updated status of the sources below.
+
 ## Evaluated Inputs
 
 - OSM community thread on Overpass performance and self-hosting pressure.

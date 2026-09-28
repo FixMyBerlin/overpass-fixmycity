@@ -1,34 +1,17 @@
-# Access Model Options
+# Access and Load Protection
 
-## Evaluation Criteria
+Policy: the endpoint `private-overpass.fixmycity.de` is reachable publicly for tool compatibility (Overpass Turbo, QGIS, scripts), but it is meant for FixMyCity only and not announced.
 
-- Security strength
-- Operational complexity
-- Application compatibility
-- Ongoing maintenance burden
+Safeguards in the default setup:
 
-## Option Comparison
+- TLS via Traefik; Overpass itself listens only on `127.0.0.1:8080`.
+- Per-IP rate limit `NGINX_CLIENT_REQ_RATE` (`germany.env`: 2 requests/s), 429 when exceeded.
+- Concurrency limited to the CPU count, then queue, then 429; query timeout 300 s (image defaults).
+- Hard container limits `OVERPASS_CPUS`/`OVERPASS_MEMORY`, so load cannot spill onto other services on the host.
+- `robots.txt`/`llms.txt` shipped by the image to keep crawlers away.
 
-| Option                                         | Security Strength | Ops Complexity | App Compatibility | Maintenance | Notes                                                               |
-| ---------------------------------------------- | ----------------- | -------------- | ----------------- | ----------- | ------------------------------------------------------------------- |
-| Publicly accessible endpoint + basic hardening | Medium            | Low            | High              | Low         | Public reachability with TLS, timeouts, monitoring, and rate-limit. |
-| Traefik IP allowlist middleware                | Medium            | Low            | Medium            | Low         | Optional tighter perimeter for specific partner/internal use cases. |
-| Private network/VPN                            | High              | Medium         | Medium            | Medium      | Strong boundary; requires network client setup.                     |
-| mTLS between client and gateway                | High              | Medium-High    | Medium            | Medium-High | Strong identity, cert lifecycle overhead.                           |
-| Token gateway in front of Overpass             | Medium-High       | High           | High              | High        | Flexible for app auth, adds custom service complexity.              |
-| Cloud security groups/private LB               | High              | Medium         | Medium-High       | Medium      | Effective in cloud-native restricted deployments.                   |
+If the endpoint attracts outside traffic (public instances now ban heavy users, which pushes them to alternatives), tighten in this order:
 
-## Recommended Default
-
-1. Publicly accessible endpoint model for broad software compatibility.
-2. Keep baseline safeguards enabled: TLS, proxy timeouts, monitoring, and `OVERPASS_RATE_LIMIT`.
-3. Document FMC as the primary owner/consumer without applying FMC-only network restrictions.
-
-## Optional Restricted Variant
-
-Use `OVERPASS_ALLOWED_CIDRS` for CIDR-restricted deployments when a partner/internal perimeter is required.
-
-## Related Guidance
-
-- For an ingress-first versus Overpass-internal knob decision framework, see `docs/security/overpass-resource-policy-evaluation.md`.
-- This deployment enables `OVERPASS_RATE_LIMIT` as a lightweight internal fairness guard while keeping other internal knobs unset.
+1. Lower `NGINX_CLIENT_REQ_RATE` or set `NGINX_CLIENT_CONN_LIMIT`.
+2. Traefik IP allowlist middleware for office/VPN/server IPs.
+3. Basic auth or a token header at Traefik (breaks Overpass Turbo usage without extra setup).

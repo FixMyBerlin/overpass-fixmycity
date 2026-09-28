@@ -5,15 +5,6 @@
     system: true
     state: present
 
-- name: Ensure service user exists
-  ansible.builtin.user:
-    name: "{{ overpass_service_user }}"
-    group: "{{ overpass_ops_group }}"
-    shell: /usr/sbin/nologin
-    create_home: true
-    system: true
-    state: present
-
 - name: Add operator user to docker group
   ansible.builtin.user:
     name: "{{ overpass_operator_user }}"
@@ -21,49 +12,31 @@
     append: true
   when: overpass_operator_user | length > 0
 
-- name: Ensure required host directories exist
+- name: Ensure repository and data root exist
   ansible.builtin.file:
-    path: "{{ item.path }}"
+    path: "{{ item }}"
     state: directory
-    owner: "{{ item.owner }}"
-    group: "{{ item.group }}"
-    mode: "{{ item.mode }}"
+    owner: root
+    group: "{{ overpass_ops_group }}"
+    mode: "0755"
   loop:
-    - path: "{{ overpass_data_root }}"
-      owner: "{{ overpass_service_user }}"
-      group: "{{ overpass_ops_group }}"
-      mode: "0750"
-    - path: "{{ overpass_data_root }}/db"
-      owner: "{{ overpass_service_user }}"
-      group: "{{ overpass_ops_group }}"
-      mode: "0750"
-    - path: "{{ overpass_data_root }}/secrets"
-      owner: root
-      group: "{{ overpass_ops_group }}"
-      mode: "0750"
-    - path: "{{ traefik_acme_root }}"
-      owner: root
-      group: root
-      mode: "0750"
-    - path: "{{ overpass_repo_root }}"
-      owner: "{{ overpass_repo_owner }}"
-      group: "{{ overpass_repo_group }}"
-      mode: "0755"
+    - "{{ overpass_repo_root }}"
+    - "{{ overpass_data_root }}"
 
-- name: Ensure ACME state file exists
-  ansible.builtin.copy:
-    dest: "{{ traefik_acme_root }}/acme.json"
-    content: ""
-    force: false
-    mode: "0600"
-    owner: root
-    group: root
-
-- name: Enforce ACME state file permissions
+# The container runs as uid/gid 10001 (b1tw153/overpass-api).
+- name: Ensure Overpass data directories exist
   ansible.builtin.file:
-    path: "{{ traefik_acme_root }}/acme.json"
-    state: file
+    path: "{{ overpass_data_root }}/{{ item }}"
+    state: directory
+    owner: "10001"
+    group: "10001"
+    mode: "0750"
+  loop: [db, diff, backup]
+
+- name: Ensure Traefik ACME directory exists
+  ansible.builtin.file:
+    path: "{{ overpass_data_root }}/traefik"
+    state: directory
     owner: root
     group: root
-    mode: "0600"
-  when: not ansible_check_mode
+    mode: "0700"

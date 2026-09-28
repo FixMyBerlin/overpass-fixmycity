@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Accepted; runtime parts (image, Geofabrik import, Berlin test profile) superseded by [ADR 0002](decision-record-0002-base-image-review.md). Data strategy (Germany, meta, no attic, osm-fr minute feed) still applies.
 
 ## Context
 

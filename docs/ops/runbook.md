@@ -1,171 +1,55 @@
 # Operations Runbook
 
-Monitoring configuration and incident policy are maintained in `docs/ops/oneuptime-monitoring.md`.
-Host baseline and monitoring reconciliation are managed with Ansible in `infra/ansible/`.
-
-Core runtime rule for this repository:
-
-- Always start the stack with `scripts/ops/start_stack.ts`.
-- Always stop the stack with `scripts/ops/stop_stack.ts`.
-- Treat direct `docker compose up/down` as exceptional maintenance/debug operations, not standard workflow.
-
-Re-apply host + monitoring state:
+All commands run from the repository root on the host (`/opt/overpass-fixmycity`). Shorthand:
 
 ```bash
-ansible-playbook -i infra/ansible/inventory/hosts.yml infra/ansible/playbooks/site.yml
+alias op='docker compose -p overpass -f infra/docker/compose.yml --env-file infra/docker/germany.env'
 ```
 
-## 1) Initialize Environment
+Add `--profile traefik` to `op` on a dedicated host where this stack terminates TLS itself (ports 80/443, DNS for `OVERPASS_DOMAIN` must point to the host).
+
+## 1) Initial import (once per database)
 
 ```bash
-cp infra/docker/.env.example infra/docker/.env
+op run --rm import
 ```
 
-Primary stack defaults (including paths, domain, Traefik, and Overpass runtime knobs) are located in `infra/docker/stack.env.yaml`.
-Use `OVERPASS_STACK_CONFIG_FILE` to switch to an alternate stack profile (for example `infra/docker/stack.test.berlin.env.yaml`) without editing the default file.
+Downloads the osm-fr Germany extract (~6 GB), imports it with meta data and writes `db/replicate_id` for the osm-fr Germany minute feed. Checks free disk space before downloading. Run it in `tmux`/`screen`; it takes hours and can be re-run after a failure (clear `db/` first).
 
-Set required runtime value in `infra/docker/.env`:
-
-- `OVERPASS_OAUTH_PASSWORD`
-
-All non-secret defaults are sourced from `infra/docker/stack.env.yaml` and can be overridden by exporting process env vars for one-off runs.
-
-For `OVERPASS_RATE_LIMIT` policy, rationale for the configured value, and tuning guidance, see `docs/security/overpass-resource-policy-evaluation.md`.
-
-## 2) Configure OAuth Credentials
-
-Set this value in `infra/docker/.env`:
-
-- `OVERPASS_OAUTH_PASSWORD`
-
-`scripts/ops/start_stack.ts` validates config inputs with Zod, then generates `/secrets/oauth-settings.json` automatically at startup.
-
-## 3) Start Stack
+## 2) Start / stop
 
 ```bash
-bun --env-file=infra/docker/.env scripts/ops/start_stack.ts
+op up -d
+op down
 ```
 
-This script creates `${TRAEFIK_ACME_ROOT}/acme.json` with restrictive permissions if missing.
-If you need additional compose overrides (for example bootstrap/local-test profiles), set `OVERPASS_COMPOSE_EXTRA_FILES` as a comma-separated list before calling `start_stack.ts`.
+On first start the database catches up with the minute feed and builds areas; queries work during catch-up but return older data. The image cleans stale dispatcher sockets after a crash and shuts the updater down in a controlled way, so a plain `docker compose up -d` after a crash or reboot is the recovery path.
 
-Image/runtime note:
-
-- Overpass is pinned to `wiktorn/overpass-api:0.7.62` in Compose for stable, repeatable production behavior on a maintained image line.
-- Compose enforces `platform: linux/amd64` for Overpass to keep Mac ARM hosts compatible via Docker emulation; expect lower performance versus native ARM execution.
-- Initial import downloads and processes the configured Germany source once per persistent `/db`. Keeping `/db` intact prevents re-downloading the large bootstrap file.
-
-## 4) Verify Query And Update Signals
+## 3) Verify
 
 ```bash
-bun tests/smoke/run_smoke.ts
-bun scripts/ops/monitor_replication.ts --interpreter-url https://private-overpass.fixmycity.de/api/interpreter --max-lag-seconds 999999
-bun scripts/ops/check_replication.ts
+scripts/smoke_test.sh http://127.0.0.1:8080 <germany-node-id>   # meta data + replication advances
+curl -s http://127.0.0.1:8080/api/timestamp                     # current data timestamp
+docker exec overpass-overpass-1 /opt/overpass/bin/container_status.sh   # all components
 ```
 
-Manual checks (useful when isolating a failing smoke step):
+## 4) Backups
+
+`OVERPASS_BACKUP_TIME` (UTC) in `germany.env` runs a daily online backup to `${OVERPASS_DATA_ROOT}/backup` (same size as the DB). Queries and updates continue during backup. One-off backup:
 
 ```bash
-bun tests/smoke/offline_validation.ts
-bun scripts/ops/verify_query.ts
-bun scripts/ops/check_replication.ts
+docker exec overpass-overpass-1 /opt/overpass/bin/backup.sh /opt/overpass/backup
 ```
 
-For one-off test target overrides, use `OVERPASS_TEST_BASE_URL`:
+Restore: stop the stack, replace `db/` with the content of `backup/`, start again; replication resumes from the restored `replicate_id`.
 
-```bash
-OVERPASS_TEST_BASE_URL="https://private-overpass.fixmycity.de" bun tests/smoke/run_smoke.ts
-bun scripts/ops/monitor_replication.ts --interpreter-url "https://private-overpass.fixmycity.de/api/interpreter" --max-lag-seconds 999999
-bun scripts/ops/check_replication.ts
-```
+## 5) Rate limits and capacity
 
-Berlin initial validation profile (fast local rerun for constrained machines):
+- `NGINX_CLIENT_REQ_RATE` limits requests per client IP (429 above the limit).
+- Beyond `CPU count` concurrent queries the image queues and then answers 429.
+- `OVERPASS_CPUS`/`OVERPASS_MEMORY` cap the container, so a heavy query cannot take down other services on the host.
+- All other knobs: [etc/overpass.env upstream](https://github.com/b1tw153/Overpass-API/blob/main/etc/overpass.env).
 
-```bash
-export OVERPASS_STACK_CONFIG_FILE="infra/docker/stack.test.berlin.env.yaml"
-export OVERPASS_COMPOSE_EXTRA_FILES="infra/docker/docker-compose.bootstrap.yml,infra/docker/docker-compose.localtest.yml"
+## 6) Update the image
 
-bun --env-file=infra/docker/.env scripts/ops/start_stack.ts
-OVERPASS_TEST_BASE_URL="http://127.0.0.1:8080" bun tests/smoke/run_smoke.ts
-bun scripts/ops/monitor_replication.ts --interpreter-url "http://127.0.0.1:8080/api/interpreter" --max-lag-seconds 999999
-bun scripts/ops/check_replication.ts
-
-bun scripts/ops/stop_stack.ts
-unset OVERPASS_STACK_CONFIG_FILE OVERPASS_COMPOSE_EXTRA_FILES
-```
-
-## 5) Stop Stack
-
-```bash
-bun scripts/ops/stop_stack.ts
-```
-
-## Recovery Notes
-
-- If startup is interrupted during heavy import/update, capture logs and preserve DB volume before retry.
-- Prefer restoring a local snapshot over re-downloading large upstream artifacts.
-- For local testing, avoid `docker compose down -v` unless a full re-initialization is explicitly required.
-- If ACME fails, confirm DNS points to this host and ports `80/443` are reachable before retrying.
-- `scripts/ops/start_stack.ts` automatically removes stale Overpass dispatcher lock files (`osm3s_areas`, `osm3s_osm_base`) when the container is not running, and logs exactly what it removed.
-- Reminder: use `start_stack.ts` for startup so stale lock auto-cleanup and startup validations always run.
-- Germany minute feed candidate currently under reliability-gate evaluation: `https://download.openstreetmap.fr/replication/europe/germany/minute/` (see `https://github.com/osm-fr/osm-extract-replication`).
-
-## Local testing: re-download decision matrix
-
-- **No re-download (default local iteration)**  
-  Keep `/db` and use normal stop/start:
-
-  ```bash
-  bun scripts/ops/stop_stack.ts
-  bun --env-file=infra/docker/.env scripts/ops/start_stack.ts
-  ```
-
-- **No re-download (recreate containers after compose/env edits)**  
-  Use script-managed restart without volume deletion:
-
-  ```bash
-  bun scripts/ops/stop_stack.ts
-  bun --env-file=infra/docker/.env scripts/ops/start_stack.ts
-  ```
-
-  Healthcheck policy:
-  - Runtime/default (strict startup window): `infra/docker/docker-compose.yml` only (`start_period: 15m`).
-
-- **Re-download required (intentional full rebuild only)**  
-  Delete volumes/data and re-run bootstrap (exceptional maintenance path):
-  ```bash
-  docker compose --env-file infra/docker/.env -f infra/docker/docker-compose.yml down -v
-  bun --env-file=infra/docker/.env scripts/ops/start_stack.ts
-  ```
-  Use this when you intentionally want a clean DB bootstrap (for example after changing baseline source URL or when DB state is irrecoverable).
-  If bootstrap-heavy imports require the bootstrap override profile, this is one of the few approved direct-compose exceptions:
-  ```bash
-  docker compose --env-file infra/docker/.env \
-    -f infra/docker/docker-compose.yml \
-    -f infra/docker/docker-compose.bootstrap.yml up -d
-  ```
-  If imports on this host regularly exceed 8h before API availability, increase only the bootstrap override `start_period` to `12h`.
-
-## Traefik Troubleshooting
-
-- Increase Traefik logging temporarily by setting `TRAEFIK_LOG_LEVEL=INFO`.
-- Keep dashboard disabled in normal operation; if temporarily enabling it, also keep `TRAEFIK_API_INSECURE=false` and expose access only through host firewall policy.
-- Confirm only intended services are public by checking `traefik.enable` labels and `--providers.docker.exposedbydefault=false`.
-
-## Log Retention Defaults
-
-- Compose sets Docker `json-file` logging for all services with `max-size: 20m` and `max-file: "5"` (about 100 MB max per container before older logs rotate out).
-- Inspect the resolved Compose config to confirm logging policy:
-
-  ```bash
-  docker compose --env-file infra/docker/.env -f infra/docker/docker-compose.yml config
-  ```
-
-- Inspect a running container to confirm active log driver and options:
-
-  ```bash
-  docker inspect overpass_de --format '{{.HostConfig.LogConfig.Type}} {{json .HostConfig.LogConfig.Config}}'
-  docker inspect overpass_traefik --format '{{.HostConfig.LogConfig.Type}} {{json .HostConfig.LogConfig.Config}}'
-  ```
-
-- If you temporarily increase Traefik verbosity for troubleshooting, revert `TRAEFIK_LOG_LEVEL` after the incident to reduce log volume and disk churn.
+Bump the tag in `infra/docker/compose.yml` (see [Docker Hub](https://hub.docker.com/r/b1tw153/overpass-api/tags) and the upstream `CHANGELOG-DOCKER.md`), then `op pull && op up -d`. The database format is upstream Overpass, so switching images does not require a re-import.
